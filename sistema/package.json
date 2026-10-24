@@ -9,7 +9,7 @@
     "dev:tela": "vite",
     "build": "vite build",
     "start": "node server/index.js",
-    "test": "node --test shared/calculo.test.js shared/regras.test.js shared/formula.test.js shared/ponto.test.js shared/pix.test.js"
+    "test": "node --test shared/calculo.test.js shared/regras.test.js shared/formula.test.js shared/ponto.test.js shared/pix.test.js client/src/guia/roteiros.test.js"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^6.1.2",

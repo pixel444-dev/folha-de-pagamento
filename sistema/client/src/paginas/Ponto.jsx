@@ -45,10 +45,10 @@ export default function Ponto() {
 
       <div className="filtros">
         <div className="segmentos">
-          <button className={visao === 'espelho' ? 'ativo' : ''} onClick={() => setParams((p) => { p.delete('ver'); return p; })}>
+          <button className={visao === 'espelho' ? 'ativo' : ''} onClick={() => setParams((p) => { p.delete('ver'); return p; })} data-guia="ponto-ver-espelho">
             Espelho da folha
           </button>
-          <button className={visao === 'pessoas' ? 'ativo' : ''} onClick={verPessoas}>
+          <button className={visao === 'pessoas' ? 'ativo' : ''} onClick={verPessoas} data-guia="ponto-ver-pessoas">
             Pessoas do relógio{semLigacao ? ` (${semLigacao} sem ligação)` : ''}
           </button>
         </div>
@@ -86,7 +86,7 @@ function Importar({ oficina, info, aoImportar }) {
 
   const r = estado.resultado;
   return (
-    <section className="bloco bloco-corpo">
+    <section className="bloco bloco-corpo" data-guia="ponto-importar">
       <h2 className="secao-titulo">Arquivo do relógio</h2>
       <p className="secao-desc">
         No relógio, encaixe o pendrive na porta fiscal e espere gerar o arquivo AFD (um .txt). Depois escolha o arquivo aqui.
@@ -136,7 +136,7 @@ function HorarioOficina({ oficina, horario, aoSalvar }) {
   };
 
   return (
-    <section className="bloco bloco-corpo">
+    <section className="bloco bloco-corpo" data-guia="ponto-horario">
       <h2 className="secao-titulo">Horário de trabalho</h2>
       <p className="secao-desc">
         Vale para todos da oficina, menos quem tiver horário próprio (em “Pessoas do relógio”).
@@ -264,19 +264,19 @@ function Espelho({ oficina, info, aoVerPessoas }) {
         <div className="bloco vazio">Carregando…</div>
       ) : (
         <>
-          <div className="barra-folha">
+          <div className="barra-folha" data-guia="ponto-periodo">
             <span className="estado-salvo">Período:</span>
             <input type="date" className="campo" style={{ width: 'auto' }} value={dados.periodo.inicio} onChange={(e) => mudarData('inicio', e.target.value)} aria-label="Início do período" />
             <span className="estado-salvo">a</span>
             <input type="date" className="campo" style={{ width: 'auto' }} value={dados.periodo.fim} onChange={(e) => mudarData('fim', e.target.value)} aria-label="Fim do período" />
             {periodo && <button className="btn btn-texto btn-p" onClick={() => setPeriodo(null)}>Voltar ao período da folha</button>}
             <span className="espaco" />
-            <button className="btn" disabled={!comPonto.length} onClick={() => imprimir()}>
+            <button className="btn" disabled={!comPonto.length} onClick={() => imprimir()} data-guia="ponto-imprimir">
               <svg viewBox="0 0 24 24"><path d="M7 9V3h10v6M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M7 14h10v7H7z" /></svg>
               Imprimir espelhos
             </button>
             {fm?.status === 'aberta' && (
-              <button className="btn btn-primario" disabled={ocupado || !comPonto.length} onClick={levarParaFolha}>
+              <button className="btn btn-primario" disabled={ocupado || !comPonto.length} onClick={levarParaFolha} data-guia="ponto-levar">
                 Levar para a folha
               </button>
             )}
@@ -304,7 +304,7 @@ function Espelho({ oficina, info, aoVerPessoas }) {
             </div>
           )}
 
-          <div className="bloco tabela-moldura">
+          <div className="bloco tabela-moldura" data-guia="ponto-espelho">
             <table className="tabela">
               <thead>
                 <tr>
@@ -350,7 +350,7 @@ function Espelho({ oficina, info, aoVerPessoas }) {
                         </td>
                       )}
                       <td className="dir">
-                        {e && <button className="btn btn-p" onClick={() => setDetalhe(f)}>Ver dias</button>}
+                        {e && <button className="btn btn-p" onClick={() => setDetalhe(f)} data-guia="ponto-ver-dias">Ver dias</button>}
                       </td>
                     </tr>
                   );
@@ -501,7 +501,7 @@ function Pessoas({ info, aoMudar }) {
         </div>
       )}
 
-      <div className="bloco tabela-moldura">
+      <div className="bloco tabela-moldura" data-guia="ponto-pessoas">
         <table className="tabela">
           <thead>
             <tr>

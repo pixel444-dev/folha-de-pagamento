@@ -46,9 +46,9 @@ export function CampoNumero({ valor, aoMudar, tipo = 'numero', className = '', .
 }
 
 /** Rótulo + campo, para formulários. */
-export function Campo({ rotulo, dica, children, className = '' }) {
+export function Campo({ rotulo, dica, children, className = '', ...resto }) {
   return (
-    <label className={`grupo-campo ${className}`}>
+    <label className={`grupo-campo ${className}`} {...resto}>
       <span className="rotulo">{rotulo}</span>
       {children}
       {dica && <span className="dica">{dica}</span>}

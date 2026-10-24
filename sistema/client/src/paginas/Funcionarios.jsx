@@ -54,7 +54,7 @@ export default function Funcionarios() {
 
   return (
     <>
-      <div className="filtros">
+      <div className="filtros" data-guia="func-filtros">
         <input className="campo busca" placeholder="Buscar por nome, função ou titular do PIX" value={busca} onChange={(e) => setBusca(e.target.value)} />
         <div className="segmentos" role="tablist">
           {[0, ...oficina.folhas.map((f) => f.numero)].map((n) => {
@@ -73,12 +73,12 @@ export default function Funcionarios() {
           </label>
         )}
         <span style={{ flex: 1 }} />
-        <button className="btn btn-primario" onClick={() => abrir('novo')}>+ Novo funcionário</button>
+        <button className="btn btn-primario" onClick={() => abrir('novo')} data-guia="func-novo">+ Novo funcionário</button>
       </div>
 
       {erro && <div className="faixa faixa-erro">{erro}</div>}
 
-      <div className="bloco tabela-moldura">
+      <div className="bloco tabela-moldura" data-guia="func-tabela">
         <table className="tabela">
           <thead>
             <tr>

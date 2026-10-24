@@ -45,6 +45,15 @@ Dê dois cliques em **`Abrir Versão de Testes.bat`** (na pasta `folha de pagame
 
 Precisa do [Node.js](https://nodejs.org) versão 22.13 ou mais nova.
 
+## Ajuda dentro do sistema (guia passo a passo)
+
+Na primeira vez que o sistema é aberto num computador, aparece um convite para um guia rápido. O guia mostra, com balões, onde fica cada coisa e o que fazer, destacando na tela o botão ou o campo de cada passo.
+
+- Para ver de novo, clique em **Ajuda** (no rodapé do menu da esquerda) e escolha a parte do sistema: Conhecendo o sistema, Criar uma empresa, Cadastrar funcionários, Fazer a folha do mês, Ajustes de um funcionário, Lançar vales, Relógio de ponto, Regras de pagamento, Histórico, Configurações da empresa ou Cópias de segurança. No alto aparecem os guias da tela em que você está.
+- Avance com **Próximo** (ou a seta → do teclado), volte com **Voltar** (seta ←) e saia quando quiser no **×** ou com a tecla **Esc**.
+- O guia troca de tela e abre os painéis sozinho, mas **não muda nada nos dados**: ele nunca salva, apaga nem lança nada.
+- Se uma parte ainda não aparece na tela (por exemplo, a folha do mês ainda não foi aberta ou o relógio de ponto ainda não tem arquivo), o balão explica quando ela vai aparecer.
+
 ## Como fazer a folha do mês
 
 1. Entre na empresa (menu da esquerda), aba **Folha do mês**, escolha o mês e a folha (1ª, 2ª, 3ª…).
@@ -313,6 +322,8 @@ sistema/
   server/               API (Express) e banco SQLite (node:sqlite)
   server/acesso.js      senha e sessões (exigidas quando há senha definida)
   client/src/           telas em React
+  client/src/guia/      guia passo a passo (botão Ajuda): roteiros.js tem os passos de cada parte, e cada passo
+                        aponta para um data-guia nas telas + teste em roteiros.test.js (avisa se um sumir)
   instalacao/           scripts do servidor: instalar, atualizar (com volta automática), trocar senha
   desenvolvimento/      scripts só do computador de testes: gerar pacote, carregar dados do servidor
                         (esta pasta não vai no pacote; os scripts do servidor usam a presença dela
@@ -323,6 +334,6 @@ sistema/
 - `node server/index.js --rede`: modo **produção**. Aceita outros computadores (0.0.0.0) e só inicia se houver senha (`node server/definir-senha.js`). Sem `--rede` é a **versão de testes** (só 127.0.0.1, com faixa e marca d'água de testes).
 - `GET /api/info` devolve `{ ambiente: 'producao' | 'testes', versao }` (público, usado pela tela e pelo atualizador).
 
-- `npm test`: testes das regras de cálculo, das regras das empresas, das fórmulas, do ponto e do Pix
+- `npm test`: testes das regras de cálculo, das regras das empresas, das fórmulas, do ponto, do Pix e dos roteiros do guia
 - `npm run dev:servidor` e `npm run dev:tela`: modo de desenvolvimento (tela em http://localhost:5173)
 - `npm run build` + `npm start`: modo normal

@@ -67,12 +67,12 @@ function ListaRegras({ oficina, recarregar }) {
         uma regra pode usar o valor das que estão acima dela (mude a ordem com as setas). Valem para as folhas em andamento e as
         próximas; folhas fechadas não mudam.
       </p>
-      <div className="regras-lista">
+      <div className="regras-lista" data-guia="regras-lista">
         {regras.map((b, i) => {
           const d = descreverRegra(b, lista);
           return (
             <div className={`regra-item ${b.ativo ? '' : 'desligada'}`} key={b.id}>
-              <div className="regra-ordem">
+              <div className="regra-ordem" data-guia="regras-ordem">
                 <button className="btn-icone" aria-label={`Subir ${b.nome}`} title="Subir" disabled={i === 0 || estado.salvando} onClick={() => mover(i, -1)}>{SOBE}</button>
                 <button className="btn-icone" aria-label={`Descer ${b.nome}`} title="Descer" disabled={i === regras.length - 1 || estado.salvando} onClick={() => mover(i, 1)}>{DESCE}</button>
               </div>
@@ -84,7 +84,7 @@ function ListaRegras({ oficina, recarregar }) {
                 </div>
                 <div className="regra-frase">{d.quem} · {d.quando} · {d.quanto}</div>
               </div>
-              <div className="regra-acoes">
+              <div className="regra-acoes" data-guia="regras-acoes">
                 <button className="btn btn-p" onClick={() => setEditando(b)}>Editar</button>
                 <button className="btn btn-p btn-texto" disabled={estado.salvando} onClick={() => duplicar(b)} title="Cria uma cópia no fim da lista">Duplicar</button>
                 <button className="btn btn-p btn-texto" disabled={estado.salvando} onClick={() => alternar(b)}>{b.ativo ? 'Desligar' : 'Ligar'}</button>
@@ -99,7 +99,7 @@ function ListaRegras({ oficina, recarregar }) {
       </div>
       <div className="acoes-form">
         <Mensagem estado={estado} />
-        <button className="btn btn-primario" onClick={() => setEditando(NOVA)}>+ Nova regra</button>
+        <button className="btn btn-primario" onClick={() => setEditando(NOVA)} data-guia="regras-nova">+ Nova regra</button>
       </div>
       {editando && (
         <EditorRegra
@@ -213,12 +213,12 @@ function EditorRegra({ regra, oficina, aoFechar, aoSalvo }) {
         <>
           {erro && <span className="mini negativo esquerda">{erro}</span>}
           <button className="btn" onClick={aoFechar}>Cancelar</button>
-          <button className="btn btn-primario" disabled={salvando} onClick={salvar}>Salvar regra</button>
+          <button className="btn btn-primario" disabled={salvando} onClick={salvar} data-guia="regra-salvar">Salvar regra</button>
         </>
       )}
     >
       {!form.id && (
-        <section className="painel">
+        <section className="painel" data-guia="regra-modelo">
           <Campo rotulo="Começar de um modelo" dica={modelo ? modelo.explicacao : 'Escolha um modelo pronto e ajuste, ou monte do zero.'}>
             <select className="campo" value={modelo ? MODELOS.indexOf(modelo) : ''} onChange={(e) => usarModelo(e.target.value === '' ? -1 : Number(e.target.value))}>
               <option value="">Regra em branco</option>
@@ -228,7 +228,7 @@ function EditorRegra({ regra, oficina, aoFechar, aoSalvo }) {
         </section>
       )}
 
-      <section className="painel">
+      <section className="painel" data-guia="regra-nome">
         <div className="grade-form">
           <Campo rotulo="Nome (sai assim no card)">
             <input className="campo" value={form.nome} maxLength={60} placeholder="Ex.: Prêmio assiduidade" onChange={(e) => mudar({ nome: e.target.value })} />
@@ -249,7 +249,7 @@ function EditorRegra({ regra, oficina, aoFechar, aoSalvo }) {
         </label>
       </section>
 
-      <section className="painel">
+      <section className="painel" data-guia="regra-quem">
         <div className="painel-titulo"><h3><span className="passo">1</span>{desconto ? 'Para quem vale' : 'Quem recebe'}</h3></div>
         <select className="campo" value={def.quem} onChange={(e) => mudarDef({ quem: e.target.value })}>
           {Object.entries(QUEM).map(([k, r]) => <option key={k} value={k}>{r}</option>)}
@@ -264,7 +264,7 @@ function EditorRegra({ regra, oficina, aoFechar, aoSalvo }) {
         )}
       </section>
 
-      <section className="painel">
+      <section className="painel" data-guia="regra-quando">
         <div className="painel-titulo">
           <h3><span className="passo">2</span>Quando</h3>
           <button className="btn btn-p" onClick={() => mudarDef({ condicoes: [...def.condicoes, { variavel: 'faltas', op: 'igual', valor: 0 }] })}>
@@ -314,7 +314,7 @@ function EditorRegra({ regra, oficina, aoFechar, aoSalvo }) {
         )}
       </section>
 
-      <section className="painel">
+      <section className="painel" data-guia="regra-quanto">
         <div className="painel-titulo"><h3><span className="passo">3</span>Quanto</h3></div>
         <select className="campo" value={calculo.modo} onChange={(e) => mudarDef({ calculo: calculoPadrao(e.target.value) })}>
           {Object.entries(MODOS).map(([k, r]) => <option key={k} value={k}>{r}</option>)}
@@ -658,7 +658,7 @@ function TesteRegra({ form, oficina, funcionarios, lista }) {
   const mostrarValores = [...usadas].filter((k) => ['calculado', 'folha', 'regras'].includes(grupoDe(k)) && k !== 'mes');
 
   return (
-    <section className="painel teste-regra">
+    <section className="painel teste-regra" data-guia="regra-teste">
       <div className="painel-titulo"><h3>Testar antes de salvar</h3></div>
       <div className="grade-form">
         <Campo rotulo="Testar com">
@@ -749,7 +749,7 @@ function CalculoBasico({ oficina, recarregar }) {
   const exemplo = valorDoDia(1000, form);
 
   return (
-    <section className="bloco bloco-corpo">
+    <section className="bloco bloco-corpo" data-guia="regras-basico">
       <h2 className="secao-titulo">Cálculo básico</h2>
       <p className="secao-desc">Faltas, atrasos, sábados e hora extra. Valem para as folhas em andamento e as próximas. Folhas já fechadas não mudam.</p>
       <div className="grade-form">
@@ -817,7 +817,7 @@ function CamposPersonalizados({ oficina, recarregar }) {
   };
 
   return (
-    <section className="bloco bloco-corpo">
+    <section className="bloco bloco-corpo" data-guia="regras-campos">
       <h2 className="secao-titulo">Campos personalizados</h2>
       <p className="secao-desc">
         Crie campos para o que a empresa precisar e use nas regras. <strong>Folha do mês</strong>: lançado todo mês, vira uma coluna

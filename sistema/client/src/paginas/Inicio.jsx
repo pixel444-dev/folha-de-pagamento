@@ -50,13 +50,13 @@ export default function Inicio() {
           <h1>Folha de Pagamento</h1>
           <p>Folhas de {competencia(ano, mes).toLowerCase()}</p>
         </div>
-        <Link className="btn" to="/?nova">+ Nova empresa</Link>
+        <Link className="btn" to="/?nova" data-guia="inicio-nova-empresa">+ Nova empresa</Link>
       </div>
       {criando && <NovaOficina aoFechar={fecharNova} />}
 
       <div className="grade-oficinas">
         {oficinas.map((o) => (
-          <section key={o.id} className="bloco cartao-oficina" style={{ '--cor': o.cor }}>
+          <section key={o.id} className="bloco cartao-oficina" style={{ '--cor': o.cor }} data-guia="inicio-empresa">
             <div className="titulo-oficina">
               <div>
                 <h2>{o.nome}</h2>
@@ -90,7 +90,7 @@ export default function Inicio() {
                 );
               })}
             </div>
-            <div className="acoes">
+            <div className="acoes" data-guia="inicio-atalhos">
               <Link className="btn btn-primario" to={`/empresa/${o.slug}/folha`}>Folha do mês</Link>
               <Link className="btn" to={`/empresa/${o.slug}/funcionarios`}>Funcionários</Link>
               <Link className="btn btn-texto" to={`/empresa/${o.slug}/historico`}>Histórico</Link>
@@ -99,7 +99,7 @@ export default function Inicio() {
         ))}
       </div>
 
-      <div className="dicas">
+      <div className="dicas" data-guia="inicio-dicas">
         <div className="bloco dica-item">
           <strong>1. Abra a folha do mês</strong>
           Todos os funcionários ativos daquela folha entram automaticamente, com salário e bonificações do cadastro.
@@ -150,15 +150,15 @@ function NovaOficina({ aoFechar }) {
         <>
           {erro && <span className="mini negativo" style={{ marginRight: 'auto' }}>{erro}</span>}
           <button type="button" className="btn btn-texto" onClick={aoFechar}>Cancelar</button>
-          <button type="submit" form="form-nova-oficina" className="btn btn-primario" disabled={salvando || !nome.trim()}>Criar empresa</button>
+          <button type="submit" form="form-nova-oficina" className="btn btn-primario" disabled={salvando || !nome.trim()} data-guia="nova-empresa-criar">Criar empresa</button>
         </>
       )}
     >
       <form id="form-nova-oficina" onSubmit={criar} className="grade-form" style={{ '--cor': cor }}>
-        <Campo rotulo="Nome da empresa" className="inteiro">
+        <Campo rotulo="Nome da empresa" className="inteiro" data-guia="nova-empresa-nome">
           <input className="campo" value={nome} maxLength={60} autoFocus onChange={(e) => setNome(e.target.value)} placeholder="Ex.: Loja Centro" />
         </Campo>
-        <Campo rotulo="Cor" className="inteiro">
+        <Campo rotulo="Cor" className="inteiro" data-guia="nova-empresa-cor">
           <EscolherCor valor={cor} aoMudar={setCor} />
         </Campo>
         <p className="mini inteiro">

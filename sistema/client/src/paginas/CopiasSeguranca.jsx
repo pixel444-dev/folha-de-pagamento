@@ -68,7 +68,7 @@ export default function CopiasSeguranca() {
           <h1>Cópias de segurança</h1>
           <p>O sistema copia o banco uma vez por dia e sempre que uma folha é fechada, guardando as 60 mais recentes em cada pasta.</p>
         </div>
-        <div className="copias-acoes">
+        <div className="copias-acoes" data-guia="copias-acoes">
           <button className="btn btn-primario" disabled={estado.ocupado} onClick={copiarAgora}>Fazer cópia agora</button>
           <a className="btn" href="/api/backup" download>Baixar cópia</a>
         </div>
@@ -79,14 +79,14 @@ export default function CopiasSeguranca() {
       )}
 
       <div className="copias-grade">
-        <section className="bloco bloco-corpo">
+        <section className="bloco bloco-corpo" data-guia="copias-principal">
           <h2 className="secao-titulo">Pasta principal</h2>
           <p className="secao-desc">Fica junto com o sistema, no mesmo computador.</p>
           <code className="copias-caminho">{situacao.pastaPrincipal}</code>
           <Resumo resumo={situacao.principal} />
         </section>
 
-        <section className="bloco bloco-corpo">
+        <section className="bloco bloco-corpo" data-guia="copias-extra">
           <h2 className="secao-titulo">Segunda pasta</h2>
           <p className="secao-desc">
             Cada cópia também é gravada aqui. Use outro disco, um HD externo ou uma pasta sincronizada com a nuvem, para não perder tudo se o disco

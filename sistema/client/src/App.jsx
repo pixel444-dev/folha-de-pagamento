@@ -15,6 +15,7 @@ import ReciboVale from './paginas/ReciboVale.jsx';
 import EspelhoPonto from './paginas/EspelhoPonto.jsx';
 import Entrar from './paginas/Entrar.jsx';
 import CopiasSeguranca from './paginas/CopiasSeguranca.jsx';
+import { BoasVindas, GuiaProvider, useGuia } from './guia/Guia.jsx';
 
 const OficinasCtx = createContext(null);
 export const useOficinas = () => useContext(OficinasCtx);
@@ -92,33 +93,36 @@ export default function App() {
       {info?.ambiente === 'testes' && (
         <div className="marca-testes-impressao" aria-hidden="true">VERSÃO DE TESTES · NÃO USAR PARA PAGAMENTO</div>
       )}
-      <Routes>
-        <Route path="/imprimir" element={<Imprimir />} />
-        <Route path="/recibo-vale" element={<ReciboVale />} />
-        <Route path="/espelho-ponto" element={<EspelhoPonto />} />
-        <Route element={<Estrutura />}>
-          <Route index element={<Inicio />} />
-          <Route path="oficina/*" element={<EnderecoAntigo />} />
-          <Route path="empresa/:slug" element={<Oficina />}>
-            <Route index element={<Navigate to="folha" replace />} />
-            <Route path="folha" element={<FolhaMes />} />
-            <Route path="ponto" element={<Ponto />} />
-            <Route path="funcionarios" element={<Funcionarios />} />
-            <Route path="vales" element={<Vales />} />
-            <Route path="historico" element={<Historico />} />
-            <Route path="regras" element={<Regras />} />
-            <Route path="configuracoes" element={<Configuracoes />} />
+      <GuiaProvider>
+        <Routes>
+          <Route path="/imprimir" element={<Imprimir />} />
+          <Route path="/recibo-vale" element={<ReciboVale />} />
+          <Route path="/espelho-ponto" element={<EspelhoPonto />} />
+          <Route element={<Estrutura />}>
+            <Route index element={<Inicio />} />
+            <Route path="oficina/*" element={<EnderecoAntigo />} />
+            <Route path="empresa/:slug" element={<Oficina />}>
+              <Route index element={<Navigate to="folha" replace />} />
+              <Route path="folha" element={<FolhaMes />} />
+              <Route path="ponto" element={<Ponto />} />
+              <Route path="funcionarios" element={<Funcionarios />} />
+              <Route path="vales" element={<Vales />} />
+              <Route path="historico" element={<Historico />} />
+              <Route path="regras" element={<Regras />} />
+              <Route path="configuracoes" element={<Configuracoes />} />
+            </Route>
+            <Route path="copias" element={<CopiasSeguranca />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
-          <Route path="copias" element={<CopiasSeguranca />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Route>
-      </Routes>
+        </Routes>
+      </GuiaProvider>
     </OficinasCtx.Provider>
   );
 }
 
 function Estrutura() {
   const { oficinas, sair, info } = useOficinas();
+  const { abrirAjuda } = useGuia();
   return (
     <div className="estrutura">
       <aside className="lateral">
@@ -138,7 +142,7 @@ function Estrutura() {
           </span>
         </NavLink>
 
-        <nav className="menu">
+        <nav className="menu" data-guia="menu">
           <NavLink to="/" end className="menu-item">Início</NavLink>
           <div className="menu-titulo">Empresas</div>
           {oficinas.map((o) => (
@@ -152,7 +156,11 @@ function Estrutura() {
         </nav>
 
         <div className="lateral-rodape">
-          <NavLink to="/copias" className="menu-item">Cópias de segurança</NavLink>
+          <button type="button" className="menu-item menu-ajuda" data-guia="menu-ajuda" onClick={abrirAjuda}>
+            <span className="menu-ajuda-icone" aria-hidden="true">?</span>
+            <span>Ajuda<small>Guias passo a passo</small></span>
+          </button>
+          <NavLink to="/copias" className="menu-item" data-guia="menu-copias">Cópias de segurança</NavLink>
           {sair && <button type="button" className="menu-item" onClick={sair}>Sair</button>}
           {info && <div className="versao">Versão {info.versao}</div>}
         </div>
@@ -160,6 +168,7 @@ function Estrutura() {
       <main className="conteudo">
         <Outlet />
       </main>
+      <BoasVindas />
     </div>
   );
 }

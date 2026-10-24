@@ -107,7 +107,7 @@ export default function FormFuncionario({ oficina, funcionarioId, folhaInicial, 
             <button className="btn btn-texto btn-perigo esquerda" onClick={excluir}>Excluir</button>
           )}
           <button className="btn" onClick={fechar}>Cancelar</button>
-          <button className="btn btn-primario" onClick={salvar} disabled={salvando}>
+          <button className="btn btn-primario" onClick={salvar} disabled={salvando} data-guia="func-salvar">
             {salvando ? 'Salvando…' : funcionarioId ? 'Salvar alterações' : 'Cadastrar funcionário'}
           </button>
         </>
@@ -118,7 +118,7 @@ export default function FormFuncionario({ oficina, funcionarioId, folhaInicial, 
         <div className="vazio">Carregando…</div>
       ) : (
         <>
-          <section className="painel">
+          <section className="painel" data-guia="func-dados">
             <div className="painel-titulo"><h3>Dados do funcionário</h3></div>
             <div className="grade-form">
               <Campo rotulo="Nome (aparece no card) *">
@@ -151,7 +151,7 @@ export default function FormFuncionario({ oficina, funcionarioId, folhaInicial, 
             </div>
           </section>
 
-          <section className="painel">
+          <section className="painel" data-guia="func-bonificacoes">
             <div className="painel-titulo"><h3>Bonificações e comissão</h3></div>
             {bonificacoesAtribuiveis.length === 0 && (
               <p className="mini">Esta empresa não tem bonificações para marcar no cadastro. Dá para criar na aba Regras.</p>
@@ -219,7 +219,7 @@ export default function FormFuncionario({ oficina, funcionarioId, folhaInicial, 
             </section>
           )}
 
-          <section className="painel">
+          <section className="painel" data-guia="func-pix">
             <div className="painel-titulo"><h3>Chave PIX</h3></div>
             <div className="grade-form">
               <Campo rotulo="Tipo de chave">
@@ -251,7 +251,7 @@ export default function FormFuncionario({ oficina, funcionarioId, folhaInicial, 
             <Campo rotulo="Observações (não saem no card)">
               <textarea className="campo" value={form.observacoes} onChange={(e) => mudar({ observacoes: e.target.value })} />
             </Campo>
-            <label className="caixa-marcar" style={{ marginTop: 10 }}>
+            <label className="caixa-marcar" style={{ marginTop: 10 }} data-guia="func-desligado">
               <input type="checkbox" checked={!form.ativo} onChange={(e) => mudar({ ativo: !e.target.checked })} />
               <span>
                 <strong>Funcionário desligado</strong>

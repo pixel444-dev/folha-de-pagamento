@@ -251,7 +251,7 @@ export default function FolhaMes() {
   return (
     <>
       <div className="barra-mes">
-        <div className="seletor-mes">
+        <div className="seletor-mes" data-guia="folha-mes">
           <button className="btn-icone" onClick={() => mudarMes(-1)} aria-label="Mês anterior">
             <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6" /></svg>
           </button>
@@ -284,7 +284,7 @@ export default function FolhaMes() {
         </div>
       )}
 
-      <div className="abas-folha">
+      <div className="abas-folha" data-guia="folha-abas">
         {oficina.folhas.map((f) => {
           const s = situacao?.find((x) => x.numero === f.numero);
           const fm = s?.folha_mensal;
@@ -325,13 +325,13 @@ export default function FolhaMes() {
             Ao abrir, os {situacao?.find((s) => s.numero === folhaNum)?.ativos ?? 0} funcionários ativos desta folha entram
             automaticamente, com salário, bonificações e parcelas de vales já calculados.
           </p>
-          <button className="btn btn-primario btn-g" onClick={abrirFolha} disabled={ocupado}>
+          <button className="btn btn-primario btn-g" onClick={abrirFolha} disabled={ocupado} data-guia="folha-abrir">
             Abrir {rotuloFolha(folhaInfo)} de {competencia(ano, mes)}
           </button>
         </div>
       ) : (
         <>
-          <div className="totais">
+          <div className="totais" data-guia="folha-totais">
             <div className="bloco total"><span>Funcionários</span><strong>{totais.funcionarios}</strong></div>
             <div className="bloco total"><span>Total de proventos</span><strong>{brl(totais.total_proventos)}</strong></div>
             <div className="bloco total"><span>Total de descontos</span><strong>{brl(totais.total_descontos)}</strong></div>
@@ -340,7 +340,7 @@ export default function FolhaMes() {
 
           <div className="barra-folha">
             {aberta ? (
-              <span className={`estado-salvo ${salvamento.estado === 'erro' ? 'erro' : ''}`}>
+              <span className={`estado-salvo ${salvamento.estado === 'erro' ? 'erro' : ''}`} data-guia="folha-salvo">
                 {salvamento.estado === 'ok' && '✓ Tudo salvo'}
                 {salvamento.estado === 'pendente' && 'Alterações não salvas…'}
                 {salvamento.estado === 'salvando' && 'Salvando…'}
@@ -352,23 +352,23 @@ export default function FolhaMes() {
               </span>
             )}
             <span className="espaco" />
-            <button className="btn" onClick={() => imprimir()} disabled={ocupado || !linhas.length}>
+            <button className="btn" onClick={() => imprimir()} disabled={ocupado || !linhas.length} data-guia="folha-imprimir">
               <svg viewBox="0 0 24 24"><path d="M7 9V3h10v6M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M7 14h10v7H7z" /></svg>
               Imprimir cards
             </button>
             {aberta ? (
               <>
-                <Link className="btn" to={`../ponto?ano=${ano}&mes=${mes}&folha=${folhaNum}`}>Puxar do ponto</Link>
+                <Link className="btn" to={`../ponto?ano=${ano}&mes=${mes}&folha=${folhaNum}`} data-guia="folha-puxar-ponto">Puxar do ponto</Link>
                 <button className="btn btn-texto btn-perigo" onClick={excluirFolha} disabled={ocupado}>Excluir folha</button>
-                <button className="btn btn-primario" onClick={fecharFolha} disabled={ocupado}>Fechar folha</button>
+                <button className="btn btn-primario" onClick={fecharFolha} disabled={ocupado} data-guia="folha-fechar">Fechar folha</button>
               </>
             ) : (
-              <button className="btn" onClick={reabrirFolha} disabled={ocupado}>Reabrir folha</button>
+              <button className="btn" onClick={reabrirFolha} disabled={ocupado} data-guia="folha-fechar">Reabrir folha</button>
             )}
           </div>
 
           {aberta && dados.pendentes.length > 0 && (
-            <div className="faixa faixa-alerta">
+            <div className="faixa faixa-alerta" data-guia="folha-pendentes">
               <span>
                 <strong>{dados.pendentes.length} funcionário(s) ativo(s) desta folha não estão na lista:</strong>{' '}
                 {dados.pendentes.map((p) => p.nome).join(', ')}
@@ -377,7 +377,7 @@ export default function FolhaMes() {
             </div>
           )}
 
-          <div className="bloco tabela-moldura">
+          <div className="bloco tabela-moldura" data-guia="folha-tabela">
             <table className="tabela">
               <thead>
                 <tr>
@@ -466,7 +466,7 @@ export default function FolhaMes() {
                       </td>
                       <td className={`dir liquido-celula ${r.liquido < 0 ? 'negativo' : ''}`}>{valor(r.liquido)}</td>
                       <td className="dir">
-                        <button className="btn btn-p" onClick={() => setDetalheId(l.id)}>
+                        <button className="btn btn-p" onClick={() => setDetalheId(l.id)} data-guia={aberta ? 'folha-ajustes' : undefined}>
                           {aberta ? (outros ? `Ajustes (${outros})` : 'Ajustes') : 'Ver card'}
                         </button>
                       </td>

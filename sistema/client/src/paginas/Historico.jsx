@@ -68,14 +68,14 @@ export default function Historico() {
   return (
     <>
       <div className="filtros">
-        <div className="segmentos">
+        <div className="segmentos" data-guia="hist-anos">
           {anos.map((a) => (
             <button key={a} className={a === ano ? 'ativo' : ''} onClick={() => setAno(a)}>{a}</button>
           ))}
         </div>
       </div>
 
-      <div className="resumo-ano">
+      <div className="resumo-ano" data-guia="hist-resumo">
         <div className="bloco stats">
           <div><span>Total pago em {ano}</span><strong>{brl(totalAno)}</strong></div>
           <div><span>Média por mês</span><strong>{brl(meses.length ? totalAno / meses.length : 0)}</strong></div>
@@ -96,7 +96,7 @@ export default function Historico() {
         </div>
       </div>
 
-      <div className="grade-meses">
+      <div className="grade-meses" data-guia="hist-meses">
         {meses.map(({ mes, folhas, total }) => {
           const nomes = (parte) => [...new Set(folhas.flatMap((f) => Object.keys(f.totais?.[parte] || {})))];
           // Regras de pagamento: as que somam vêm depois do salário; as que descontam, depois de faltas e atrasos.

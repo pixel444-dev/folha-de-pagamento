@@ -44,7 +44,7 @@ export default function DetalheLancamento({ lancamento: l, oficina, folha, ano, 
         <>
           {aberta && <button className="btn btn-texto btn-perigo esquerda" onClick={aoRemover}>Tirar desta folha</button>}
           <button className="btn" onClick={aoImprimir}>Imprimir só este card</button>
-          <button className="btn btn-primario" onClick={aoFechar}>Pronto</button>
+          <button className="btn btn-primario" onClick={aoFechar} data-guia="ajustes-pronto">Pronto</button>
         </>
       )}
     >
@@ -56,7 +56,7 @@ export default function DetalheLancamento({ lancamento: l, oficina, folha, ano, 
 
       {aberta && (
         <>
-          <section className="painel">
+          <section className="painel" data-guia="ajustes-lancamentos">
             <div className="painel-titulo"><h3>Lançamentos do mês</h3></div>
             <div className="grade-3">
               <Campo rotulo="Faltas (dias)" dica="Meio dia = 0,5">
@@ -122,7 +122,7 @@ export default function DetalheLancamento({ lancamento: l, oficina, folha, ano, 
             aoLancarVale={aoLancarVale}
           />
 
-          <section className="painel">
+          <section className="painel" data-guia="ajustes-descontos">
             <div className="painel-titulo">
               <h3>Outros descontos (compras…)</h3>
               <button className="btn btn-p" onClick={() => aoMudar({ descontos: [...descontos, { tipo: 'compra', descricao: '', valor: 0 }] })}>
@@ -149,7 +149,7 @@ export default function DetalheLancamento({ lancamento: l, oficina, folha, ano, 
             </div>
           </section>
 
-          <section className="painel">
+          <section className="painel" data-guia="ajustes-acrescimos">
             <div className="painel-titulo">
               <h3>Acréscimos</h3>
               <button className="btn btn-p" onClick={() => aoMudar({ acrescimos: [...acrescimos, { descricao: '', valor: 0 }] })}>
@@ -173,7 +173,7 @@ export default function DetalheLancamento({ lancamento: l, oficina, folha, ano, 
             </div>
           </section>
 
-          <section className="painel">
+          <section className="painel" data-guia="ajustes-observacao">
             <Campo rotulo="Observação no card" dica="Opcional. Sai impressa no card (uma linha).">
               <input className="campo" value={l.observacao || ''} maxLength={90} onChange={(e) => aoMudar({ observacao: e.target.value })} />
             </Campo>
@@ -181,7 +181,7 @@ export default function DetalheLancamento({ lancamento: l, oficina, folha, ano, 
         </>
       )}
 
-      <section>
+      <section data-guia="ajustes-previa">
         <div className="painel-titulo"><h3>Prévia do card</h3></div>
         <div className="previa-card">
           <CardPagamento dados={card} />
@@ -222,7 +222,7 @@ function PainelVales({ lancamento: l, oficina, ano, mes, parcelas, aoMudar, aoLa
   };
 
   return (
-    <section className="painel">
+    <section className="painel" data-guia="ajustes-vales">
       <div className="painel-titulo">
         <h3>Vales</h3>
         {!novo && <button className="btn btn-p" onClick={() => setNovo({ valor: 0, vezes: 1, descricao: '' })}>+ Lançar vale</button>}

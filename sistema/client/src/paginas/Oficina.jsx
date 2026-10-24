@@ -24,14 +24,14 @@ export default function Oficina() {
           </p>
         </div>
       </div>
-      <nav className="abas">
-        <NavLink className="aba" to={`${base}/folha`}>Folha do mês</NavLink>
-        <NavLink className="aba" to={`${base}/ponto`}>Ponto</NavLink>
-        <NavLink className="aba" to={`${base}/funcionarios`}>Funcionários</NavLink>
-        <NavLink className="aba" to={`${base}/vales`}>Vales</NavLink>
-        <NavLink className="aba" to={`${base}/historico`}>Histórico</NavLink>
-        <NavLink className="aba" to={`${base}/regras`}>Regras</NavLink>
-        <NavLink className="aba" to={`${base}/configuracoes`}>Configurações</NavLink>
+      <nav className="abas" data-guia="empresa-abas">
+        <NavLink className="aba" to={`${base}/folha`} data-guia="aba-folha">Folha do mês</NavLink>
+        <NavLink className="aba" to={`${base}/ponto`} data-guia="aba-ponto">Ponto</NavLink>
+        <NavLink className="aba" to={`${base}/funcionarios`} data-guia="aba-funcionarios">Funcionários</NavLink>
+        <NavLink className="aba" to={`${base}/vales`} data-guia="aba-vales">Vales</NavLink>
+        <NavLink className="aba" to={`${base}/historico`} data-guia="aba-historico">Histórico</NavLink>
+        <NavLink className="aba" to={`${base}/regras`} data-guia="aba-regras">Regras</NavLink>
+        <NavLink className="aba" to={`${base}/configuracoes`} data-guia="aba-configuracoes">Configurações</NavLink>
       </nav>
       <Outlet context={{ oficina, recarregar }} key={oficina.id} />
     </div>

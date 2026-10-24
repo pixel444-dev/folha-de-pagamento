@@ -57,7 +57,7 @@ function Identificacao({ oficina, recarregar }) {
   const mudar = (p) => setForm((f) => ({ ...f, ...p }));
 
   return (
-    <section className="bloco bloco-corpo">
+    <section className="bloco bloco-corpo" data-guia="config-empresa">
       <h2 className="secao-titulo">Empresa</h2>
       <p className="secao-desc">Nome e cor da empresa. Folhas já fechadas continuam com o nome antigo no histórico e nos cards.</p>
       <div className="grade-form">
@@ -110,7 +110,7 @@ function ApagarOficina({ oficina, recarregar }) {
 
   if (oficinas.length <= 1) return null;
   return (
-    <section className="bloco bloco-corpo">
+    <section className="bloco bloco-corpo" data-guia="config-apagar">
       <h2 className="secao-titulo">Apagar empresa</h2>
       {!conteudo ? (
         <>
@@ -205,7 +205,7 @@ function Logo({ oficina, recarregar }) {
   };
 
   return (
-    <section className="bloco bloco-corpo">
+    <section className="bloco bloco-corpo" data-guia="config-logo">
       <h2 className="secao-titulo">Logo da empresa</h2>
       <p className="secao-desc">Sai no topo de cada card de pagamento e na lista de conferência. PNG com fundo branco ou transparente fica melhor.</p>
       <div className="logo-config">
@@ -267,7 +267,7 @@ function Folhas({ oficina, recarregar }) {
   };
 
   return (
-    <section className="bloco bloco-corpo">
+    <section className="bloco bloco-corpo" data-guia="config-folhas">
       <h2 className="secao-titulo">Folhas (grupos)</h2>
       <p className="secao-desc">
         Cada folha é um grupo de funcionários pago junto. Dê um apelido (ex.: Grupo A) e o dia em que cada uma fecha.

@@ -100,7 +100,7 @@ export default function Vales() {
 
   return (
     <>
-      <div className="totais totais-3">
+      <div className="totais totais-3" data-guia="vales-totais">
         <div className="bloco total forte"><span>Saldo a descontar</span><strong>{brl(saldoTotal)}</strong></div>
         <div className="bloco total"><span>Vales em aberto</span><strong>{abertos.length}</strong></div>
         <div className="bloco total"><span>Lançados em {MESES[hoje.getMonth()].toLowerCase()}</span><strong>{brl(totalDoMes)}</strong></div>
@@ -115,7 +115,7 @@ export default function Vales() {
       )}
       {erro && <div className="faixa faixa-erro">{erro}</div>}
 
-      <div className="filtros">
+      <div className="filtros" data-guia="vales-filtros">
         <input className="campo busca" placeholder="Buscar por funcionário ou descrição" value={busca} onChange={(e) => setBusca(e.target.value)} />
         <div className="segmentos">
           {[['aberto', 'Em aberto'], ['quitado', 'Quitados'], ['todos', 'Todos']].map(([k, r]) => (
@@ -129,10 +129,10 @@ export default function Vales() {
           </span>
         )}
         <span style={{ flex: 1 }} />
-        <button className="btn btn-primario" onClick={() => mudarParams({ v: 'novo', para: filtroFuncionario })}>+ Lançar vale</button>
+        <button className="btn btn-primario" onClick={() => mudarParams({ v: 'novo', para: filtroFuncionario })} data-guia="vales-novo">+ Lançar vale</button>
       </div>
 
-      <div className="bloco tabela-moldura">
+      <div className="bloco tabela-moldura" data-guia="vales-tabela">
         <table className="tabela">
           <thead>
             <tr>
@@ -286,7 +286,7 @@ function FormVale({ oficina, vale, funcionarios, funcionarioInicial, aoSalvar, a
           {vale && travado && vale.saldo > 0 && <button className="btn btn-texto esquerda" onClick={encerrar} disabled={salvando}>Encerrar saldo</button>}
           {vale && <button className="btn" onClick={() => abrirRecibo(vale.id)}>Recibo</button>}
           <button className="btn" onClick={aoFechar}>Cancelar</button>
-          <button className="btn btn-primario" onClick={salvar} disabled={salvando}>
+          <button className="btn btn-primario" onClick={salvar} disabled={salvando} data-guia="vale-salvar">
             {salvando ? 'Salvando…' : vale ? 'Salvar alterações' : 'Lançar vale'}
           </button>
         </>
@@ -296,7 +296,7 @@ function FormVale({ oficina, vale, funcionarios, funcionarioInicial, aoSalvar, a
 
       <section className="painel">
         <div className="grade-form">
-          <Campo rotulo="Funcionário *" className="inteiro">
+          <Campo rotulo="Funcionário *" className="inteiro" data-guia="vale-funcionario">
             <select className="campo" value={form.funcionario_id} disabled={travado} onChange={(e) => mudar({ funcionario_id: e.target.value })} autoFocus={!vale && !funcionarioInicial}>
               <option value="">Escolha…</option>
               {porFolha.map((g) => (
@@ -312,7 +312,7 @@ function FormVale({ oficina, vale, funcionarios, funcionarioInicial, aoSalvar, a
           <Campo rotulo="Data do vale">
             <input className="campo" type="date" value={form.data} onChange={(e) => mudar({ data: e.target.value })} />
           </Campo>
-          <Campo rotulo="Descontar em quantas vezes" className="inteiro">
+          <Campo rotulo="Descontar em quantas vezes" className="inteiro" data-guia="vale-vezes">
             <div className="vezes">
               {[1, 2, 3, 4, 5, 6].map((n) => (
                 <button key={n} type="button" className={`btn btn-p ${parcelas === n ? 'selecionado' : ''}`} onClick={() => mudar({ num_parcelas: n })}>
@@ -322,7 +322,7 @@ function FormVale({ oficina, vale, funcionarios, funcionarioInicial, aoSalvar, a
               <CampoNumero valor={form.num_parcelas} aoMudar={(v) => mudar({ num_parcelas: Math.round(v) })} aria-label="Número de parcelas" style={{ width: 64 }} />
             </div>
           </Campo>
-          <Campo rotulo="Começar a descontar na folha de">
+          <Campo rotulo="Começar a descontar na folha de" data-guia="vale-inicio">
             <input className="campo" type="month" value={form.inicio} onChange={(e) => mudar({ inicio: e.target.value })} />
           </Campo>
           <Campo rotulo="Tipo">
@@ -339,7 +339,7 @@ function FormVale({ oficina, vale, funcionarios, funcionarioInicial, aoSalvar, a
       </section>
 
       {form.valor_total > 0 && meses.length > 0 && (
-        <section className="painel resumo-vale">
+        <section className="painel resumo-vale" data-guia="vale-resumo">
           <h3>Como vai ser descontado</h3>
           <p>
             {parcelas === 1 ? (
