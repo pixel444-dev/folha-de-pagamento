@@ -22,6 +22,16 @@ export const TIPOS_DESCONTO = { vale: 'Vale', compra: 'Compra', outro: 'Outro' }
  * Valor de um dia de trabalho: salário ÷ divisor (22).
  * Com "arredondar_dia" ligado usa só o quociente inteiro da divisão (900 ÷ 22 = 40).
  */
+/**
+ * Nome das faltas no card ("2 dias"): o nome do divisor que a empresa escolheu ("dias úteis").
+ * Com o nome padrão, "1 dia" fica no singular; um nome escolhido aparece como foi escrito.
+ */
+export function unidadeDasFaltas(qtd, oficina) {
+  const nome = String(oficina.divisor_nome ?? '').trim() || 'dias';
+  if (nome === 'dias') return qtd === 1 ? 'dia' : 'dias';
+  return nome;
+}
+
 export function valorDoDia(salario, oficina) {
   const divisor = n(oficina.divisor_dias) || 22;
   const v = n(salario) / divisor;
@@ -223,7 +233,7 @@ export function calcularLancamento(ctx, l = {}) {
 
   const descontos = [];
   if (valorFaltas) {
-    descontos.push({ chave: 'faltas', rotulo: 'Faltas', detalhe: `${fmtQtd(faltas)} ${faltas === 1 ? 'dia' : 'dias'}`, valor: valorFaltas });
+    descontos.push({ chave: 'faltas', rotulo: 'Faltas', detalhe: `${fmtQtd(faltas)} ${unidadeDasFaltas(faltas, oficina)}`, valor: valorFaltas });
     resumo.faltas = valorFaltas;
   }
   if (valorAtrasos) {

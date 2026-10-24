@@ -338,9 +338,10 @@ app.put('/api/oficinas/:id', (req, res) => {
   const horas = numero(b.horas_por_dia, o.horas_por_dia);
   if (divisor <= 0) falhar(400, 'O divisor de dias precisa ser maior que zero.');
   if (horas <= 0) falhar(400, 'As horas por dia precisam ser maiores que zero.');
-  db.prepare(`UPDATE oficinas SET valor_hora_extra = ?, divisor_dias = ?, arredondar_dia = ?, horas_por_dia = ?,
+  const divisorNome = b.divisor_nome === undefined ? o.divisor_nome : String(b.divisor_nome ?? '').trim().slice(0, 30) || 'dias';
+  db.prepare(`UPDATE oficinas SET valor_hora_extra = ?, divisor_dias = ?, divisor_nome = ?, arredondar_dia = ?, horas_por_dia = ?,
       sabado_modo = ?, sabado_valor = ? WHERE id = ?`)
-    .run(numero(b.valor_hora_extra, o.valor_hora_extra), divisor, b.arredondar_dia ? 1 : 0, horas,
+    .run(numero(b.valor_hora_extra, o.valor_hora_extra), divisor, divisorNome, b.arredondar_dia ? 1 : 0, horas,
       sabadoModo, numero(b.sabado_valor, 0), o.id);
   res.json(carregarOficina(o.id));
 });

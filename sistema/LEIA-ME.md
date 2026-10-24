@@ -82,7 +82,7 @@ Na primeira vez que o sistema é aberto num computador, aparece um convite para 
 | Bonificações, prêmios e descontos | montados por cada empresa na aba **Regras** (veja abaixo). Ex.: zero falta, vale almoço. |
 | Vales | descontados sozinhos todo mês até quitar o saldo (aba Vales) |
 
-Todos os valores (hora extra, sábado, divisor e as regras da empresa) podem ser mudados na aba **Regras** de cada empresa, a qualquer hora. Valem para as folhas em andamento e as próximas; folhas fechadas não mudam.
+Todos os valores (hora extra, sábado, divisor e as regras da empresa) podem ser mudados na aba **Regras** de cada empresa, a qualquer hora. Valem para as folhas em andamento e as próximas; folhas fechadas não mudam. Ao lado do divisor dá para trocar o nome que aparece no lugar de "dias" (ex.: "dias úteis").
 
 ## Regras da empresa (sem precisar programar)
 

@@ -270,6 +270,8 @@ if (!colunas('funcionarios').includes('campos')) db.exec("ALTER TABLE funcionari
 if (!colunas('lancamentos').includes('campos')) db.exec("ALTER TABLE lancamentos ADD COLUMN campos TEXT NOT NULL DEFAULT '{}'");
 // Ajustes manuais das regras com condição nesta folha: { [regraId]: 'sim' | 'nao' | null }.
 if (!colunas('lancamentos').includes('regras_manuais')) db.exec("ALTER TABLE lancamentos ADD COLUMN regras_manuais TEXT NOT NULL DEFAULT '{}'");
+// Nome da unidade do divisor do salário ("Dividir o salário por 22 dias"), que a empresa pode trocar.
+if (!colunas('oficinas').includes('divisor_nome')) db.exec("ALTER TABLE oficinas ADD COLUMN divisor_nome TEXT NOT NULL DEFAULT 'dias'");
 
 if (db.prepare('SELECT COUNT(*) AS n FROM oficinas').get().n === 0) {
   tx(() => semear(db));

@@ -739,6 +739,7 @@ function CalculoBasico({ oficina, recarregar }) {
   const [form, setForm] = useState({
     valor_hora_extra: oficina.valor_hora_extra,
     divisor_dias: oficina.divisor_dias,
+    divisor_nome: oficina.divisor_nome || 'dias',
     arredondar_dia: oficina.arredondar_dia,
     horas_por_dia: oficina.horas_por_dia,
     sabado_modo: oficina.sabado_modo,
@@ -756,15 +757,26 @@ function CalculoBasico({ oficina, recarregar }) {
         <Campo rotulo="Hora extra (R$ por hora)" dica="Deixe em 0 se usar uma regra de hora extra">
           <CampoNumero tipo="moeda" valor={form.valor_hora_extra} aoMudar={(v) => mudar({ valor_hora_extra: v })} />
         </Campo>
-        <Campo rotulo="Dividir o salário por (dias)" dica="Para achar o valor do dia de falta">
-          <CampoNumero valor={form.divisor_dias} aoMudar={(v) => mudar({ divisor_dias: v })} />
+        <Campo rotulo={`Dividir o salário por (${form.divisor_nome.trim() || 'dias'})`} dica="Para achar o valor do dia de falta. O nome ao lado pode ser trocado">
+          <div style={{ display: 'flex', gap: 8 }}>
+            <CampoNumero valor={form.divisor_dias} aoMudar={(v) => mudar({ divisor_dias: v })} style={{ flex: 1, minWidth: 0 }} />
+            <input
+              className="campo"
+              style={{ flex: 1, minWidth: 0 }}
+              aria-label="Nome do divisor"
+              placeholder="dias"
+              maxLength={30}
+              value={form.divisor_nome}
+              onChange={(e) => mudar({ divisor_nome: e.target.value })}
+            />
+          </div>
         </Campo>
         <label className="caixa-marcar inteiro">
           <input type="checkbox" checked={form.arredondar_dia} onChange={(e) => mudar({ arredondar_dia: e.target.checked })} />
           <span>
             <strong>Usar só o quociente inteiro da divisão</strong>
             <small>
-              Ex.: salário de R$ 1.000,00 ÷ {form.divisor_dias || 22} → dia de falta = {brl(exemplo)}
+              Ex.: salário de R$ 1.000,00 ÷ {form.divisor_dias || 22} {form.divisor_nome.trim() || 'dias'} → dia de falta = {brl(exemplo)}
               {form.arredondar_dia ? ' (sem os centavos)' : ''}
             </small>
           </span>

@@ -22,6 +22,18 @@ test('valor do dia usa o quociente inteiro de salário ÷ 22', () => {
   assert.ok(Math.abs(valorDoDia(1500, { ...sitio, arredondar_dia: false }) - 68.1818) < 0.001);
 });
 
+test('faltas no card usam o nome do divisor da empresa', () => {
+  const faltas = (oficina, qtd) => calcularLancamento(
+    { oficina, bonificacoes: [], funcionario: { salario: 900, bonificacoes: [] }, ano: 2026, mes: 9 },
+    { faltas: qtd },
+  ).descontos.find((d) => d.chave === 'faltas');
+  assert.equal(faltas(sitio, 1).detalhe, '1 dia');
+  assert.equal(faltas(sitio, 2).detalhe, '2 dias');
+  assert.equal(faltas({ ...sitio, divisor_nome: 'dias úteis' }, 2).detalhe, '2 dias úteis');
+  assert.equal(faltas({ ...sitio, divisor_nome: '  ' }, 2).detalhe, '2 dias');
+  assert.equal(faltas({ ...sitio, divisor_nome: 'dias úteis' }, 2).valor, 80);
+});
+
 test('Vendedora (Sítio Alegre): comissão, meta, zero falta, meio sábado, 1h30 extra e compra', () => {
   const r = calcularLancamento(
     { oficina: sitio, bonificacoes: bonsSitio, funcionario: { salario: 1500, bonificacoes: [] }, ano: 2026, mes: 9 },
