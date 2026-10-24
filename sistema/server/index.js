@@ -355,17 +355,22 @@ app.put('/api/oficinas/:id/folhas/:numero', (req, res) => {
   res.json(carregarOficina(o.id));
 });
 
-// Nova folha (grupo). O número nunca repete o de uma folha apagada, para não misturar o histórico.
+// Nova folha (grupo). Pega o menor número livre. Uma folha apagada só libera o número se nunca teve
+// folha do mês: as que já aparecem no histórico guardam o número, para não misturar.
 app.post('/api/oficinas/:id/folhas', (req, res) => {
   const o = oficinaOu404(req.params.id);
-  const maior = (sql) => db.prepare(sql).get(o.id).m ?? 0;
-  const numeroFolha = 1 + Math.max(
-    maior('SELECT MAX(numero) AS m FROM folhas WHERE oficina_id = ?'),
-    maior('SELECT MAX(folha_numero) AS m FROM folhas_mensais WHERE oficina_id = ?'),
-    maior('SELECT MAX(folha_numero) AS m FROM funcionarios WHERE oficina_id = ?'),
-  );
-  db.prepare('INSERT INTO folhas (oficina_id, numero, apelido, dia_fechamento) VALUES (?, ?, ?, ?)')
-    .run(o.id, numeroFolha, textoOuNulo(req.body?.apelido), diaFechamento(req.body?.dia_fechamento));
+  tx(() => {
+    db.prepare(`DELETE FROM folhas WHERE oficina_id = ? AND excluida = 1
+        AND numero NOT IN (SELECT folha_numero FROM folhas_mensais WHERE oficina_id = ?)
+        AND numero NOT IN (SELECT folha_numero FROM funcionarios WHERE oficina_id = ?)`).run(o.id, o.id, o.id);
+    const usados = new Set(db.prepare(`SELECT numero AS n FROM folhas WHERE oficina_id = ?
+        UNION SELECT folha_numero FROM folhas_mensais WHERE oficina_id = ?
+        UNION SELECT folha_numero FROM funcionarios WHERE oficina_id = ?`).all(o.id, o.id, o.id).map((r) => r.n));
+    let n = 1;
+    while (usados.has(n)) n += 1;
+    db.prepare('INSERT INTO folhas (oficina_id, numero, apelido, dia_fechamento) VALUES (?, ?, ?, ?)')
+      .run(o.id, n, textoOuNulo(req.body?.apelido), diaFechamento(req.body?.dia_fechamento));
+  });
   res.status(201).json(carregarOficina(o.id));
 });
 
