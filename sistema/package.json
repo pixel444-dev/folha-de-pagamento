@@ -1,0 +1,26 @@
+{
+  "name": "folha-de-pagamento",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Sistema de folha de pagamento, ponto e vales para empresas de qualquer ramo",
+  "type": "module",
+  "scripts": {
+    "dev:servidor": "node --watch server/index.js",
+    "dev:tela": "vite",
+    "build": "vite build",
+    "start": "node server/index.js",
+    "test": "node --test shared/calculo.test.js shared/regras.test.js shared/formula.test.js shared/ponto.test.js shared/pix.test.js"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^6.1.2",
+    "express": "^5.3.0",
+    "qrcode-generator": "1.4.4",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-router-dom": "^7.18.4",
+    "vite": "^8.3.4"
+  },
+  "engines": {
+    "node": ">=22.13"
+  }
+}

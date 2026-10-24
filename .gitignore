@@ -1,0 +1,51 @@
+# O que NUNCA deve ir para o GitHub: dados de funcionários, da folha e do ponto.
+
+# Banco de dados (funcionários, salários, PIX, lançamentos, ponto, senha) e cópias de segurança
+sistema/dados/
+dados/
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Arquivos do relógio de ponto (AFD do pendrive: nomes, PIS/CPF e batidas)
+AFD*.txt
+*.afd
+
+# Planilhas da folha (e os arquivos temporários do Excel)
+*.xlsx
+*.xls
+*.xlsm
+*.ods
+*.csv
+~$*
+
+# Recibos, espelhos e relatórios salvos
+*.pdf
+
+# Pacotes de atualização gerados (são feitos a partir do código; levam o semente.js)
+atualizacoes/
+*.zip
+
+# Variáveis de ambiente e senhas
+.env
+.env.*
+*.pem
+*.key
+
+# Gerado automaticamente
+node_modules/
+dist/
+*.log
+versao.json
+
+# Ferramentas do computador de desenvolvimento (Claude Code e Graphify)
+.claude/
+graphify-out/
+.graphifyignore
+
+# Windows
+Thumbs.db
+desktop.ini
