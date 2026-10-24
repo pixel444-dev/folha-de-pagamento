@@ -242,6 +242,9 @@ if (!colunas('bonificacoes').includes('tipo')) {
   db.exec("ALTER TABLE bonificacoes ADD COLUMN tipo TEXT NOT NULL DEFAULT 'provento' CHECK (tipo IN ('provento', 'desconto'))");
 }
 if (!colunas('bonificacoes').includes('definicao')) db.exec('ALTER TABLE bonificacoes ADD COLUMN definicao TEXT');
+// Folhas em que a regra vale: NULL = todas (também as criadas depois); senão, lista JSON com os números das folhas.
+// As regras de antes continuam valendo em todas (o código anterior ignora a coluna e também aplica em todas).
+if (!colunas('bonificacoes').includes('folhas')) db.exec('ALTER TABLE bonificacoes ADD COLUMN folhas TEXT');
 // Campos que a empresa cria para lançar na folha do mês (ex.: "Peças produzidas"); o valor fica em lancamentos.campos.
 // AUTOINCREMENT: o número de um campo apagado nunca volta, senão um campo novo herdaria os valores dele nas folhas.
 // (Bancos de teste criaram a tabela sem ele por uns dias; vazia, ela é refeita e os valores que sobraram de campos apagados, limpos.)

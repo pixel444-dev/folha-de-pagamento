@@ -3,7 +3,7 @@ import { useOutletContext, useSearchParams } from 'react-router-dom';
 import { api } from '../api.js';
 import FormFuncionario from './FormFuncionario.jsx';
 import { fmtQtd, valor } from '@shared/formato.js';
-import { definicaoDaRegra, ehMarcada } from '@shared/regras.js';
+import { definicaoDaRegra, ehMarcada, valeNaFolha } from '@shared/regras.js';
 import { faltaParaQr } from '@shared/pix.js';
 
 const juntar = (itens) => (itens.length > 1 ? `${itens.slice(0, -1).join(', ')} e ${itens.at(-1)}` : itens[0]);
@@ -106,7 +106,7 @@ export default function Funcionarios() {
                   <span style={{ display: 'inline-flex', gap: 4, flexWrap: 'wrap' }}>
                     {f.bonificacoes.map((b) => {
                       const bon = bonPorId.get(b.bonificacao_id);
-                      if (!bon || !ehMarcada(bon)) return null;
+                      if (!bon || !ehMarcada(bon) || !valeNaFolha(bon, f.folha_numero)) return null;
                       const c = definicaoDaRegra(bon).calculo;
                       const proprio = b.valor == null ? '' : c.modo === 'percentual' ? ` ${fmtQtd(b.valor)}%`
                         : c.modo === 'fixo' || c.unidade === 'reais' ? ` ${valor(b.valor)}` : ` ${fmtQtd(b.valor)}`;

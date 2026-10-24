@@ -15,7 +15,7 @@ import { instalarAcesso, temSenha } from './acesso.js';
 import { calcularLancamento, round2, saldoVale, somarResultados } from '../shared/calculo.js';
 import { calcularEspelho, formatarHorario, lerAFD, lerHorario, periodoDaFolha, somarDias, sugerirFuncionario } from '../shared/ponto.js';
 import {
-  definicaoDaRegra, ehMarcada, limparDefinicao, regraLegada, TIPOS_CAMPO, variaveisDa, variaveisUsadas,
+  cobre, definicaoDaRegra, ehMarcada, limparDefinicao, regraLegada, regrasDaFolha, TIPOS_CAMPO, variaveisDa, variaveisUsadas,
 } from '../shared/regras.js';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -88,8 +88,17 @@ function carregarOficina(oficinaId) {
   o.folhas = db.prepare('SELECT numero, apelido, dia_fechamento FROM folhas WHERE oficina_id = ? AND excluida = 0 ORDER BY numero')
     .all(oficinaId).map(comum);
   // Regras de pagamento (shared/regras.js); a definição vem sempre completa, mesmo nas bonificações antigas.
+  // folhas: null = vale em todas as folhas; senão, os números das folhas em que vale.
   o.bonificacoes = db.prepare('SELECT * FROM bonificacoes WHERE oficina_id = ? ORDER BY ordem, id').all(oficinaId)
-    .map((b) => ({ ...b, ativo: !!b.ativo, definicao: definicaoDaRegra({ ...b, definicao: lerJson(b.definicao, null) }) }));
+    .map((b) => {
+      const folhas = lerJson(b.folhas, null);
+      return {
+        ...b,
+        ativo: !!b.ativo,
+        folhas: Array.isArray(folhas) ? folhas : null,
+        definicao: definicaoDaRegra({ ...b, definicao: lerJson(b.definicao, null) }),
+      };
+    });
   o.campos = db.prepare('SELECT id, nome, tipo, escopo FROM campos_personalizados WHERE oficina_id = ? ORDER BY ordem, id').all(oficinaId).map(comum);
   const logo = db.prepare('SELECT versao FROM logos WHERE oficina_id = ?').get(oficinaId);
   o.logo_url = logo ? `/api/oficinas/${oficinaId}/logo?v=${logo.versao}` : null;
@@ -172,9 +181,10 @@ function lerLancamento(l) {
   return r;
 }
 
+// Cada folha (grupo) usa só as regras que valem nela.
 const contexto = (oficina, fm, funcionario) => ({
   oficina,
-  bonificacoes: oficina.bonificacoes,
+  bonificacoes: regrasDaFolha(oficina.bonificacoes, fm.folha_numero),
   funcionario,
   parcelamentos: funcionario.parcelamentos,
   ano: fm.ano,
@@ -189,6 +199,8 @@ function carregarFolhaMensal(fmId) {
   if (!fm) return null;
   fm.totais = lerJson(fm.totais, null);
   const oficina = carregarOficina(fm.oficina_id);
+  // A tela da folha recalcula e mostra as colunas das regras: vai só com as regras desta folha.
+  oficina.bonificacoes = regrasDaFolha(oficina.bonificacoes, fm.folha_numero);
   const fechada = fm.status === 'fechada';
 
   const lancamentos = db.prepare('SELECT * FROM lancamentos WHERE folha_mensal_id = ?').all(fmId).map(lerLancamento);
@@ -371,6 +383,11 @@ app.post('/api/oficinas/:id/folhas', (req, res) => {
     while (usados.has(n)) n += 1;
     db.prepare('INSERT INTO folhas (oficina_id, numero, apelido, dia_fechamento) VALUES (?, ?, ?, ?)')
       .run(o.id, n, textoOuNulo(req.body?.apelido), diaFechamento(req.body?.dia_fechamento));
+    // O número pode ser de uma folha apagada: a folha nova não herda as regras que valiam só nela.
+    const tirarFolha = db.prepare('UPDATE bonificacoes SET folhas = ? WHERE id = ?');
+    for (const r of o.bonificacoes) {
+      if (r.folhas?.includes(n)) tirarFolha.run(JSON.stringify(r.folhas.filter((x) => x !== n)), r.id);
+    }
   });
   res.status(201).json(carregarOficina(o.id));
 });
@@ -432,22 +449,56 @@ app.delete('/api/oficinas/:id/logo', (req, res) => {
 // ---------------------------------------------------------------- regras de pagamento (tabela bonificacoes)
 
 /**
- * Regra vinda da tela, conferida. Sem "definicao" (telas antigas) vale a escolha antiga zero falta / atribuída.
- * A regra pode usar as outras regras da empresa, nunca ela mesma (idAtual).
+ * Folhas em que a regra vai valer: null = todas; senão, só números de folhas que existem.
+ * Sem "folhas" no pedido (telas antigas), fica como estava (`atual`; regra nova vale em todas).
  */
-function dadosBonificacao(b, oficina, idAtual = null) {
+function folhasDaRegra(valor, oficina, atual = null) {
+  if (valor === undefined) return atual;
+  if (!Array.isArray(valor)) return null;
+  const existentes = new Set(oficina.folhas.map((f) => f.numero));
+  const lista = [...new Set(valor.map(Number))].filter((x) => existentes.has(x)).sort((a, b) => a - b);
+  return lista.length ? lista : falhar(400, 'Marque pelo menos uma folha em que a regra vale.');
+}
+
+/**
+ * Regra vinda da tela, conferida. Sem "definicao" (telas antigas) vale a escolha antiga zero falta / atribuída.
+ * A regra pode usar as outras regras da empresa, nunca ela mesma (idAtual), e só as que valem em todas as folhas dela.
+ */
+function dadosBonificacao(b, oficina, atual = null) {
   const nome = textoOuNulo(b.nome) || falhar(400, 'Dê um nome para a regra.');
   if (nome.length > 60) falhar(400, 'O nome da regra está muito comprido.');
   const tipo = b.tipo === 'desconto' ? 'desconto' : 'provento';
+  const folhas = folhasDaRegra(b.folhas, oficina, atual ? lerJson(atual.folhas, null) : null);
+  const outras = oficina.bonificacoes.filter((r) => r.id !== atual?.id);
   let definicao;
   try {
     const bruta = b.definicao && typeof b.definicao === 'object' ? b.definicao : definicaoDaRegra({ regra: b.regra });
-    definicao = limparDefinicao(bruta, variaveisDa(oficina.campos, oficina.bonificacoes.filter((r) => r.id !== idAtual)));
+    definicao = limparDefinicao(bruta, variaveisDa(oficina.campos, outras));
   } catch (e) {
     falhar(400, e.message);
   }
+  const usadas = variaveisUsadas(definicao);
+  const foraDaFolha = outras.find((r) => usadas.has(`regra:${r.id}`) && !cobre(r, { folhas }));
+  if (foraDaFolha) {
+    falhar(400, `Esta regra usa o valor da regra "${foraDaFolha.nome}", que não vale em todas as folhas desta. `
+      + `Marque aqui só folhas em que "${foraDaFolha.nome}" também vale, ou mude as folhas de "${foraDaFolha.nome}".`);
+  }
+  if (atual) {
+    // Uma regra que usa o valor desta precisa continuar encontrando esta em todas as folhas dela.
+    const dependente = outras.find((r) => variaveisUsadas(r.definicao).has(`regra:${atual.id}`) && !cobre({ folhas }, r));
+    if (dependente) {
+      falhar(409, `A regra "${dependente.nome}" usa o valor desta regra e vale em folhas que ficariam sem esta. `
+        + `Mude as folhas de "${dependente.nome}" antes, ou deixe esta regra valendo nessas folhas.`);
+    }
+  }
   return {
-    nome, tipo, valor: numero(b.valor), regra: regraLegada(definicao, tipo), definicao: JSON.stringify(definicao), ativo: b.ativo === false ? 0 : 1,
+    nome,
+    tipo,
+    valor: numero(b.valor),
+    regra: regraLegada(definicao, tipo),
+    definicao: JSON.stringify(definicao),
+    ativo: b.ativo === false ? 0 : 1,
+    folhas: folhas ? JSON.stringify(folhas) : null,
   };
 }
 
@@ -455,16 +506,16 @@ app.post('/api/oficinas/:id/bonificacoes', (req, res) => {
   const o = oficinaOu404(req.params.id);
   const b = dadosBonificacao(req.body || {}, o);
   const ordem = (db.prepare('SELECT MAX(ordem) AS m FROM bonificacoes WHERE oficina_id = ?').get(o.id).m ?? -1) + 1;
-  db.prepare('INSERT INTO bonificacoes (oficina_id, nome, valor, regra, ativo, ordem, tipo, definicao) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
-    .run(o.id, b.nome, b.valor, b.regra, b.ativo, ordem, b.tipo, b.definicao);
+  db.prepare('INSERT INTO bonificacoes (oficina_id, nome, valor, regra, ativo, ordem, tipo, definicao, folhas) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+    .run(o.id, b.nome, b.valor, b.regra, b.ativo, ordem, b.tipo, b.definicao, b.folhas);
   res.status(201).json(carregarOficina(o.id));
 });
 
 app.put('/api/bonificacoes/:id', (req, res) => {
   const atual = db.prepare('SELECT * FROM bonificacoes WHERE id = ?').get(id(req.params.id)) || falhar(404, 'Regra não encontrada.');
-  const b = dadosBonificacao(req.body || {}, carregarOficina(atual.oficina_id), atual.id);
-  db.prepare('UPDATE bonificacoes SET nome = ?, valor = ?, regra = ?, ativo = ?, tipo = ?, definicao = ? WHERE id = ?')
-    .run(b.nome, b.valor, b.regra, b.ativo, b.tipo, b.definicao, atual.id);
+  const b = dadosBonificacao(req.body || {}, carregarOficina(atual.oficina_id), atual);
+  db.prepare('UPDATE bonificacoes SET nome = ?, valor = ?, regra = ?, ativo = ?, tipo = ?, definicao = ?, folhas = ? WHERE id = ?')
+    .run(b.nome, b.valor, b.regra, b.ativo, b.tipo, b.definicao, b.folhas, atual.id);
   res.json(carregarOficina(atual.oficina_id));
 });
 

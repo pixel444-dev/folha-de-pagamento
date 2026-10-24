@@ -482,9 +482,15 @@ export const ROTEIROS = [
         texto: 'Na aba **Regras** você ensina o sistema a calcular: bonificações, prêmios, descontos, hora extra, faltas e sábados.',
       },
       {
+        alvo: 'regras-folhas',
+        titulo: 'Regras de cada folha',
+        texto: 'Cada folha tem as suas regras. Escolha aqui a folha para ver e mudar as regras dela. **Todas as regras** mostra as de todas as folhas juntas.',
+        seFaltar: 'Esta empresa tem uma folha só: as regras valem nela.',
+      },
+      {
         alvo: 'regras-lista',
-        titulo: 'Regras da empresa',
-        texto: 'Cada regra diz **quem** recebe, **quando** e **quanto**, e entra sozinha em todas as folhas. A frase embaixo do nome resume a regra.',
+        titulo: 'Regras da folha',
+        texto: 'Cada regra diz **quem** recebe, **quando** e **quanto**, e entra sozinha na folha do mês. A frase embaixo do nome resume a regra, e a etiqueta cinza diz em quais folhas ela vale.',
       },
       {
         alvo: 'regras-acoes',
@@ -517,6 +523,13 @@ export const ROTEIROS = [
         alvo: 'regra-nome',
         titulo: 'Nome',
         texto: 'Dê um nome (sai assim no card) e diga se a regra **soma** no pagamento ou **desconta**.',
+      },
+      {
+        gaveta: true,
+        alvo: 'regra-folhas',
+        titulo: 'Em quais folhas vale',
+        texto: 'A regra nova já vem marcada na folha que você escolheu. Dá para deixar em **todas as folhas** ou marcar mais de uma.',
+        seFaltar: 'Esta empresa tem uma folha só: a regra vale nela.',
       },
       {
         gaveta: true,

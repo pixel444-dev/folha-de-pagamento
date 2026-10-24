@@ -8,11 +8,11 @@ import Gaveta from '../componentes/Gaveta.jsx';
 import { Campo, CampoNumero } from '../componentes/Campos.jsx';
 import { Mensagem, useEnvio } from './Configuracoes.jsx';
 import { calcularLancamento, mesesDeCasa, valorDoDia } from '@shared/calculo.js';
-import { brl, MESES } from '@shared/formato.js';
+import { brl, MESES, rotuloFolha } from '@shared/formato.js';
 import { compilarFormula, FUNCOES, paraNomes } from '@shared/formula.js';
 import {
-  definicaoDaRegra, descreverCondicao, descreverRegra, ESCOPOS_CAMPO, formatarDado, GRUPOS, MODELOS, MODOS, OPERADORES, QUEM,
-  TIPOS_CAMPO, TIPOS_FAIXA, UNIDADES, variaveisDa, variaveisUsadas,
+  cobre, definicaoDaRegra, descreverCondicao, descreverRegra, ESCOPOS_CAMPO, formatarDado, GRUPOS, MODELOS, MODOS, OPERADORES, QUEM,
+  regrasDaFolha, TIPOS_CAMPO, TIPOS_FAIXA, UNIDADES, valeNaFolha, variaveisDa, variaveisUsadas,
 } from '@shared/regras.js';
 
 const LIXEIRA = <svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" /></svg>;
@@ -37,19 +37,35 @@ export default function Regras() {
 
 // ---------------------------------------------------------------- lista de regras
 
-const NOVA = { nome: '', tipo: 'provento', valor: 0, ativo: true, definicao: { quem: 'todos', condicoes: [], calculo: { modo: 'fixo' } } };
+const NOVA = { nome: '', tipo: 'provento', valor: 0, ativo: true, folhas: null, definicao: { quem: 'todos', condicoes: [], calculo: { modo: 'fixo' } } };
+
+/** "Todas as folhas", "1ª Folha", "1ª Folha e 3ª Folha · Grupo B" */
+function textoFolhas(regra, folhas) {
+  if (!Array.isArray(regra.folhas)) return 'Todas as folhas';
+  const nomes = folhas.filter((f) => regra.folhas.includes(f.numero)).map(rotuloFolha);
+  if (!nomes.length) return 'Nenhuma folha';
+  return nomes.length === 1 ? nomes[0] : `${nomes.slice(0, -1).join(', ')} e ${nomes.at(-1)}`;
+}
 
 function ListaRegras({ oficina, recarregar }) {
+  const variasFolhas = oficina.folhas.length > 1;
+  // Folha que a lista mostra (0 = todas as regras da empresa). Com uma folha só, mostra tudo e não pede para escolher.
+  const [folhaEscolhida, setFolhaEscolhida] = useState(() => (variasFolhas ? oficina.folhas[0].numero : 0));
+  const vista = variasFolhas && oficina.folhas.some((f) => f.numero === folhaEscolhida) ? folhaEscolhida : 0;
   const [editando, setEditando] = useState(null);
   const [estado, enviar] = useEnvio(recarregar);
-  const regras = oficina.bonificacoes;
-  const lista = variaveisDa(oficina.campos, regras);
+  const todas = oficina.bonificacoes;
+  const regras = vista ? regrasDaFolha(todas, vista) : todas;
+  const lista = variaveisDa(oficina.campos, todas);
 
   const alternar = (b) => enviar(() => api.put(`/bonificacoes/${b.id}`, { ...b, ativo: !b.ativo }));
   const duplicar = (b) => enviar(() => api.post(`/oficinas/${oficina.id}/bonificacoes`, { ...b, nome: `${b.nome} (cópia)`.slice(0, 60) }));
+  // Troca com a vizinha que aparece na lista (as regras de outras folhas que estão no meio não mudam de lugar).
   const mover = (i, delta) => {
-    const ids = regras.map((b) => b.id);
-    [ids[i], ids[i + delta]] = [ids[i + delta], ids[i]];
+    const ids = todas.map((b) => b.id);
+    const a = ids.indexOf(regras[i].id);
+    const z = ids.indexOf(regras[i + delta].id);
+    [ids[a], ids[z]] = [ids[z], ids[a]];
     enviar(() => api.put(`/oficinas/${oficina.id}/bonificacoes/ordem`, { ids }));
   };
   const remover = (b) => {
@@ -60,13 +76,26 @@ function ListaRegras({ oficina, recarregar }) {
 
   return (
     <section className="bloco bloco-corpo">
-      <h2 className="secao-titulo">Regras da empresa</h2>
+      <h2 className="secao-titulo">{vista ? `Regras da ${rotuloFolha(oficina.folhas.find((f) => f.numero === vista))}` : 'Regras da empresa'}</h2>
       <p className="secao-desc">
         Bonificações, prêmios e descontos que o sistema calcula sozinho em cada folha. Cada regra diz
         <strong> quem</strong> recebe, <strong>quando</strong> e <strong>quanto</strong>. Elas são calculadas de cima para baixo:
         uma regra pode usar o valor das que estão acima dela (mude a ordem com as setas). Valem para as folhas em andamento e as
         próximas; folhas fechadas não mudam.
+        {variasFolhas && ' Cada folha tem as suas regras: escolha a folha abaixo. Uma regra também pode valer em várias folhas.'}
       </p>
+      {variasFolhas && (
+        <div className="segmentos" role="tablist" style={{ marginBottom: 12 }} data-guia="regras-folhas">
+          {oficina.folhas.map((f) => (
+            <button key={f.numero} role="tab" aria-selected={vista === f.numero} className={vista === f.numero ? 'ativo' : ''} onClick={() => setFolhaEscolhida(f.numero)}>
+              {rotuloFolha(f)}
+            </button>
+          ))}
+          <button role="tab" aria-selected={vista === 0} className={vista === 0 ? 'ativo' : ''} onClick={() => setFolhaEscolhida(0)}>
+            Todas as regras
+          </button>
+        </div>
+      )}
       <div className="regras-lista" data-guia="regras-lista">
         {regras.map((b, i) => {
           const d = descreverRegra(b, lista);
@@ -81,6 +110,7 @@ function ListaRegras({ oficina, recarregar }) {
                   <strong>{b.nome}</strong>
                   <span className={`chip ${b.tipo === 'desconto' ? 'chip-vermelho' : 'chip-verde'}`}>{b.tipo === 'desconto' ? 'Desconta' : 'Soma'}</span>
                   {!b.ativo && <span className="chip chip-cinza">Desligada</span>}
+                  {(variasFolhas || Array.isArray(b.folhas)) && <span className="chip chip-cinza">{textoFolhas(b, oficina.folhas)}</span>}
                 </div>
                 <div className="regra-frase">{d.quem} · {d.quando} · {d.quanto}</div>
               </div>
@@ -95,11 +125,15 @@ function ListaRegras({ oficina, recarregar }) {
             </div>
           );
         })}
-        {!regras.length && <div className="itens-vazio">Nenhuma regra nesta empresa ainda. Comece por um dos modelos prontos.</div>}
+        {!regras.length && (
+          <div className="itens-vazio">Nenhuma regra {vista ? 'nesta folha' : 'nesta empresa'} ainda. Comece por um dos modelos prontos.</div>
+        )}
       </div>
       <div className="acoes-form">
         <Mensagem estado={estado} />
-        <button className="btn btn-primario" onClick={() => setEditando(NOVA)} data-guia="regras-nova">+ Nova regra</button>
+        <button className="btn btn-primario" onClick={() => setEditando({ ...NOVA, folhas: vista ? [vista] : null })} data-guia="regras-nova">
+          + Nova regra
+        </button>
       </div>
       {editando && (
         <EditorRegra
@@ -122,8 +156,13 @@ function ListaRegras({ oficina, recarregar }) {
 function paraForm(r, lista) {
   const definicao = definicaoDaRegra(r);
   if (definicao.calculo.modo === 'formula') definicao.calculo.formula = paraNomes(definicao.calculo.formula, lista);
-  return { id: r.id, nome: r.nome || '', tipo: r.tipo || 'provento', valor: r.valor ?? 0, ativo: r.ativo !== false, definicao };
+  return {
+    id: r.id, nome: r.nome || '', tipo: r.tipo || 'provento', valor: r.valor ?? 0, ativo: r.ativo !== false, folhas: r.folhas ?? null, definicao,
+  };
 }
+
+/** Outras regras que esta pode usar: nunca ela mesma, e só as que valem em todas as folhas dela. */
+const outrasRegras = (oficina, regra) => oficina.bonificacoes.filter((b) => b.id !== regra.id && cobre(b, regra));
 
 /** Ao trocar o jeito de calcular, começa com valores que fazem sentido. */
 function calculoPadrao(modo) {
@@ -160,9 +199,13 @@ function EntradaDado({ tipo, valor, aoMudar, ...resto }) {
 }
 
 function EditorRegra({ regra, oficina, aoFechar, aoSalvo }) {
-  // Dados que esta regra pode usar: os fixos, os campos e as outras regras (nunca ela mesma).
-  const lista = variaveisDa(oficina.campos, oficina.bonificacoes.filter((b) => b.id !== regra.id));
-  const [form, setForm] = useState(() => paraForm(regra, lista));
+  // Só as folhas que existem; uma folha apagada some da lista ao salvar.
+  const [form, setForm] = useState(() => {
+    const folhas = Array.isArray(regra.folhas) ? regra.folhas.filter((x) => oficina.folhas.some((f) => f.numero === x)) : null;
+    return paraForm({ ...regra, folhas }, variaveisDa(oficina.campos, outrasRegras(oficina, regra)));
+  });
+  // Dados que esta regra pode usar: os fixos, os campos e as outras regras das folhas dela.
+  const lista = variaveisDa(oficina.campos, outrasRegras(oficina, form));
   const [modelo, setModelo] = useState(null);
   const [funcionarios, setFuncionarios] = useState([]);
   const [erro, setErro] = useState(null);
@@ -185,14 +228,14 @@ function EditorRegra({ regra, oficina, aoFechar, aoSalvo }) {
   const usarModelo = (i) => {
     const m = MODELOS[i] || null;
     setModelo(m);
-    setForm(paraForm(m || NOVA, lista));
+    setForm((f) => ({ ...paraForm(m || NOVA, lista), folhas: f.folhas }));
   };
 
   const salvar = async () => {
     setSalvando(true);
     setErro(null);
     try {
-      const corpo = { nome: form.nome, tipo: form.tipo, valor: form.valor, ativo: form.ativo, definicao: form.definicao };
+      const corpo = { nome: form.nome, tipo: form.tipo, valor: form.valor, ativo: form.ativo, folhas: form.folhas, definicao: form.definicao };
       if (form.id) await api.put(`/bonificacoes/${form.id}`, corpo);
       else await api.post(`/oficinas/${oficina.id}/bonificacoes`, corpo);
       await aoSalvo();
@@ -248,6 +291,10 @@ function EditorRegra({ regra, oficina, aoFechar, aoSalvo }) {
           </span>
         </label>
       </section>
+
+      {(oficina.folhas.length > 1 || Array.isArray(form.folhas)) && (
+        <EscolherFolhas folhas={oficina.folhas} escolhidas={form.folhas} aoMudar={(folhas) => mudar({ folhas })} />
+      )}
 
       <section className="painel" data-guia="regra-quem">
         <div className="painel-titulo"><h3><span className="passo">1</span>{desconto ? 'Para quem vale' : 'Quem recebe'}</h3></div>
@@ -368,6 +415,34 @@ function EditorRegra({ regra, oficina, aoFechar, aoSalvo }) {
 
       <TesteRegra form={form} oficina={oficina} funcionarios={funcionarios} lista={lista} />
     </Gaveta>
+  );
+}
+
+/** Em quais folhas (grupos) a regra vale: todas, ou só as marcadas. */
+function EscolherFolhas({ folhas, escolhidas, aoMudar }) {
+  const algumas = Array.isArray(escolhidas);
+  const marcar = (numero, sim) => aoMudar(folhas.map((f) => f.numero).filter((x) => (x === numero ? sim : escolhidas.includes(x))));
+
+  return (
+    <section className="painel" data-guia="regra-folhas">
+      <div className="painel-titulo"><h3>Em quais folhas vale</h3></div>
+      <select className="campo" value={algumas ? 'algumas' : 'todas'} onChange={(e) => aoMudar(e.target.value === 'todas' ? null : [folhas[0].numero])}>
+        <option value="todas">Em todas as folhas (também nas que forem criadas depois)</option>
+        <option value="algumas">Só nas folhas marcadas</option>
+      </select>
+      {algumas && (
+        <div className="funcoes-regra" style={{ marginTop: 8 }}>
+          {folhas.map((f) => (
+            <label key={f.numero} className="caixa-marcar">
+              <input type="checkbox" checked={escolhidas.includes(f.numero)} onChange={(e) => marcar(f.numero, e.target.checked)} />
+              <span>{rotuloFolha(f)}</span>
+            </label>
+          ))}
+        </div>
+      )}
+      {algumas && !escolhidas.length && <p className="mini negativo" style={{ marginTop: 8 }}>Marque pelo menos uma folha.</p>}
+      <p className="mini" style={{ marginTop: 8 }}>Nas outras folhas a regra não entra no cálculo, nem aparece na folha do mês.</p>
+    </section>
   );
 }
 
@@ -587,6 +662,11 @@ function TesteRegra({ form, oficina, funcionarios, lista }) {
   const [quemId, setQuemId] = useState('');
   const [pessoa, setPessoa] = useState({ salario: 1500, funcao: '', meses: 0, comissionado: false, campos: {}, marcado: true, proprio: null, marcas: [] });
   const [mesTeste, setMesTeste] = useState({});
+  // Folha do teste: as outras regras que entram no cálculo são as dela. Fica numa folha em que esta regra vale.
+  const folhasDaRegra = oficina.folhas.filter((f) => valeNaFolha(form, f.numero));
+  const [folhaEscolhida, setFolhaEscolhida] = useState(null);
+  const folhaTeste = (folhasDaRegra.find((f) => f.numero === folhaEscolhida) || folhasDaRegra[0] || oficina.folhas[0]).numero;
+  const daRegra = funcionarios.filter((f) => valeNaFolha(form, f.folha_numero));
 
   const info = (chave) => lista.find((v) => v.chave === chave) || { rotulo: chave, tipo: 'numero' };
   const def = definicaoDaRegra(form);
@@ -598,6 +678,7 @@ function TesteRegra({ form, oficina, funcionarios, lista }) {
     setQuemId(fid);
     const f = funcionarios.find((x) => String(x.id) === fid);
     if (!f) return;
+    setFolhaEscolhida(f.folha_numero);
     const marcado = f.bonificacoes.find((b) => b.bonificacao_id === form.id);
     setPessoa({
       salario: f.salario,
@@ -612,10 +693,11 @@ function TesteRegra({ form, oficina, funcionarios, lista }) {
   };
   const mudarPessoa = (p) => setPessoa((x) => ({ ...x, ...p }));
 
-  // Calcula a folha inteira da pessoa com todas as regras da empresa (esta no lugar dela, ou no fim se for nova),
+  // Calcula a folha inteira da pessoa com todas as regras da folha (esta no lugar dela, ou no fim se for nova),
   // para a regra ver os totais e as regras de cima exatamente como na folha.
   const regraTeste = { ...form, id: idTeste, ativo: true };
-  const regras = form.id ? oficina.bonificacoes.map((b) => (b.id === form.id ? regraTeste : b)) : [...oficina.bonificacoes, regraTeste];
+  const regras = (form.id ? oficina.bonificacoes.map((b) => (b.id === form.id ? regraTeste : b)) : [...oficina.bonificacoes, regraTeste])
+    .filter((b) => b.id === idTeste || valeNaFolha(b, folhaTeste));
   const inicio = new Date(ano, mes - 1 - pessoa.meses, 1);
   const funcionario = {
     salario: pessoa.salario,
@@ -664,9 +746,16 @@ function TesteRegra({ form, oficina, funcionarios, lista }) {
         <Campo rotulo="Testar com">
           <select className="campo" value={quemId} onChange={(e) => escolher(e.target.value)}>
             <option value="">Um exemplo (preencha abaixo)</option>
-            {funcionarios.map((f) => <option key={f.id} value={f.id}>{f.nome}</option>)}
+            {daRegra.map((f) => <option key={f.id} value={f.id}>{f.nome}</option>)}
           </select>
         </Campo>
+        {folhasDaRegra.length > 1 && (
+          <Campo rotulo="Folha">
+            <select className="campo" value={folhaTeste} onChange={(e) => setFolhaEscolhida(Number(e.target.value))}>
+              {folhasDaRegra.map((f) => <option key={f.numero} value={f.numero}>{rotuloFolha(f)}</option>)}
+            </select>
+          </Campo>
+        )}
         <Campo rotulo="Salário (R$)">
           <CampoNumero tipo="moeda" valor={pessoa.salario} aoMudar={(salario) => mudarPessoa({ salario })} />
         </Campo>
@@ -728,7 +817,9 @@ function TesteRegra({ form, oficina, funcionarios, lista }) {
       <div className={`teste-resultado ${resultado.sim ? 'sim' : 'nao'}`} role="status">
         {resultado.sim ? '✓ ' : '✗ '}{resultado.texto}
       </div>
-      <p className="mini" style={{ marginTop: 6 }}>Líquido do mês desta pessoa, com todas as regras da empresa: {brl(r.liquido)}</p>
+      <p className="mini" style={{ marginTop: 6 }}>
+        Líquido do mês desta pessoa, com todas as regras {oficina.folhas.length > 1 ? `da ${rotuloFolha(oficina.folhas.find((f) => f.numero === folhaTeste))}` : 'da empresa'}: {brl(r.liquido)}
+      </p>
     </section>
   );
 }

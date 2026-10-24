@@ -79,14 +79,24 @@ Na primeira vez que o sistema é aberto num computador, aparece um convite para 
 | Atraso / saída antecipada | horas × (valor do dia ÷ horas por dia; padrão 8 h) |
 | Hora extra | horas × valor da hora extra (padrão R$ 7,00) |
 | Sábado | um dia de salário (padrão) ou um valor fixo por sábado |
-| Bonificações, prêmios e descontos | montados por cada empresa na aba **Regras** (veja abaixo). Ex.: zero falta, vale almoço. |
+| Bonificações, prêmios e descontos | montados na aba **Regras**, para cada folha (veja abaixo). Ex.: zero falta, vale almoço. |
 | Vales | descontados sozinhos todo mês até quitar o saldo (aba Vales) |
 
 Todos os valores (hora extra, sábado, divisor e as regras da empresa) podem ser mudados na aba **Regras** de cada empresa, a qualquer hora. Valem para as folhas em andamento e as próximas; folhas fechadas não mudam. Ao lado do divisor dá para trocar o nome que aparece no lugar de "dias" (ex.: "dias úteis").
 
 ## Regras da empresa (sem precisar programar)
 
-Cada empresa tem as suas bonificações, prêmios e descontos. Eles ficam na aba **Regras** e cada regra é montada em três passos:
+Cada folha tem as suas bonificações, prêmios e descontos. Eles ficam na aba **Regras** da empresa.
+
+**Regras de cada folha:** quando a empresa tem mais de uma folha, a aba **Regras** mostra no alto um botão para cada folha (1ª Folha, 2ª Folha…). Clique na folha para ver só as regras dela; **+ Nova regra** cria a regra já marcada nessa folha. No passo **Em quais folhas vale** da regra dá para escolher:
+- **Em todas as folhas** (também nas que forem criadas depois); ou
+- **Só nas folhas marcadas**: uma folha só ou várias.
+
+Cada regra mostra numa etiqueta cinza em quais folhas vale, e **Todas as regras** mostra as de todas as folhas juntas. Na folha do mês e no cadastro do funcionário aparecem só as regras da folha da pessoa. As regras criadas antes desta mudança continuam valendo em todas as folhas, até você mudar.
+
+O **Cálculo básico** (hora extra, divisor do salário, horas por dia, sábado) e os **Campos personalizados** continuam sendo da empresa inteira.
+
+Cada regra é montada em três passos:
 
 1. **Quem recebe:** todos os funcionários, só quem estiver marcado no cadastro (como o vale almoço; cada pessoa pode ter um valor próprio) ou só algumas funções (ex.: Vendedor).
 2. **Quando:** nenhuma condição (vale sempre) ou condições com os dados do mês. Ex.: *faltas igual a 0* **e** *horas de atraso no máximo 2h*; *mês da folha igual a 12* (só em dezembro). Dá para pedir todas as condições ou só uma delas.
@@ -129,6 +139,7 @@ Bom saber:
 - **Dias trabalhados** = dias do mês (o divisor do salário, normalmente 22) menos as faltas.
 - **Desligar** uma regra guarda ela sem usar. **Apagar** tira de vez (folhas fechadas não mudam).
 - Um campo ou uma regra que está sendo usado por outra regra não pode ser apagado: mude ou apague a outra regra antes.
+- Uma regra só pode usar o valor de outra regra que vale nas mesmas folhas que ela (ou em todas). Se não for assim, o sistema avisa ao salvar e diz o que mudar.
 - Se for usar uma regra de hora extra (ex.: hora extra 50%), deixe a hora extra do **Cálculo básico** em R$ 0,00 para não pagar duas vezes.
 - Numa fórmula, dividir por zero dá zero, e uma fórmula com erro não paga nada (o teste mostra o erro).
 

@@ -227,6 +227,16 @@ export function variaveisUsadas(def, lista = null) {
 export const temCondicoes = (b) => definicaoDaRegra(b).condicoes.length > 0;
 export const ehMarcada = (b) => definicaoDaRegra(b).quem === 'marcados';
 
+// ---------------------------------------------------------------- folhas em que a regra vale
+// b.folhas = null: todas as folhas da empresa (também as criadas depois); senão, a lista com os números das folhas.
+
+export const valeNaFolha = (b, numero) => !Array.isArray(b.folhas) || b.folhas.includes(numero);
+/** Regras de uma folha, na ordem da lista (as outras não entram no cálculo dela). */
+export const regrasDaFolha = (regras, numero) => regras.filter((b) => valeNaFolha(b, numero));
+/** `outra` vale em todas as folhas em que `regra` vale: só assim `regra` pode usar o valor de `outra`. */
+export const cobre = (outra, regra) => !Array.isArray(outra.folhas)
+  || (Array.isArray(regra.folhas) && regra.folhas.every((x) => outra.folhas.includes(x)));
+
 function comparar(a, op, b) {
   switch (op) {
     case 'igual': return Math.abs(a - b) < PERTO;

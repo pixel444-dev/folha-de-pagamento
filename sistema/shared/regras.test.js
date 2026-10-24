@@ -5,7 +5,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { calcularLancamento, mesesDeCasa, somarResultados, somarTotais } from './calculo.js';
 import { brl } from './formato.js';
-import { avaliarRegra, definicaoDaRegra, descreverRegra, limparDefinicao, MODELOS, regraLegada, variaveisDa, variaveisUsadas } from './regras.js';
+import {
+  avaliarRegra, cobre, definicaoDaRegra, descreverRegra, limparDefinicao, MODELOS, regraLegada, regrasDaFolha, valeNaFolha, variaveisDa, variaveisUsadas,
+} from './regras.js';
 
 const sitio = { divisor_dias: 22, arredondar_dia: true, horas_por_dia: 9, valor_hora_extra: 7, sabado_modo: 'diaria', sabado_valor: 0 };
 const empresaTeste = { divisor_dias: 22, arredondar_dia: true, horas_por_dia: 8, valor_hora_extra: 7, sabado_modo: 'fixo', sabado_valor: 20 };
@@ -252,6 +254,28 @@ test('regras usam os totais e o valor das regras de cima (a ordem da lista impor
   // regra de quem não é da função conta como 0 para as outras
   const soVendedor = regra(1, 'Prêmio', 100, { quem: 'funcoes', funcoes: ['Vendedor'] });
   assert.equal(calc(empresaTeste, [soVendedor, reflexo], { salario: 1000, funcao: 'Auxiliar' }).liquido, 1000);
+});
+
+test('cada folha usa só as regras que valem nela', () => {
+  const todas = regra(1, 'Cesta', 50, {}); // sem folhas = todas, como as regras de antes
+  const soDaPrimeira = regra(2, 'Prêmio', 100, {}, { folhas: [1] });
+  const daSegundaETerceira = regra(3, 'Produção', 30, {}, { folhas: [2, 3] });
+  const regras = [todas, soDaPrimeira, daSegundaETerceira];
+  assert.deepEqual(regrasDaFolha(regras, 1).map((b) => b.id), [1, 2]);
+  assert.deepEqual(regrasDaFolha(regras, 2).map((b) => b.id), [1, 3]);
+  assert.deepEqual(regrasDaFolha(regras, 4).map((b) => b.id), [1]); // folha criada depois
+  assert.equal(valeNaFolha({ folhas: [] }, 1), false);
+  const f = { salario: 1000 };
+  assert.equal(calc(empresaTeste, regrasDaFolha(regras, 1), f).liquido, 1150);
+  assert.equal(calc(empresaTeste, regrasDaFolha(regras, 3), f).liquido, 1080);
+});
+
+test('uma regra só pode usar o valor de outra que vale em todas as folhas dela', () => {
+  assert.ok(cobre({ folhas: null }, { folhas: [1] }));
+  assert.ok(cobre({ folhas: null }, { folhas: null }));
+  assert.ok(cobre({ folhas: [1, 2] }, { folhas: [2] }));
+  assert.ok(!cobre({ folhas: [1] }, { folhas: [1, 2] }));
+  assert.ok(!cobre({ folhas: [1, 2] }, { folhas: null })); // "todas" inclui as folhas criadas depois
 });
 
 test('valores da folha para as regras: horas extras, sábados, faltas, atrasos e acréscimos', () => {

@@ -5,7 +5,7 @@ import Gaveta from '../componentes/Gaveta.jsx';
 import { Campo, CampoNumero } from '../componentes/Campos.jsx';
 import { TIPOS_DESCONTO } from '@shared/calculo.js';
 import { brl, competenciaCurta, fmtData, fmtQtd, valor } from '@shared/formato.js';
-import { definicaoDaRegra, descreverCalculo, ehMarcada, variaveisDa } from '@shared/regras.js';
+import { definicaoDaRegra, descreverCalculo, ehMarcada, valeNaFolha, variaveisDa } from '@shared/regras.js';
 import { faltaParaQr } from '@shared/pix.js';
 import { SituacaoVale } from './Vales.jsx';
 
@@ -38,8 +38,10 @@ export default function FormFuncionario({ oficina, funcionarioId, folhaInicial, 
   };
 
   // Regras "só quem estiver marcado no cadastro"; as outras valem sozinhas, pelas condições de cada uma.
-  const bonificacoesAtribuiveis = oficina.bonificacoes.filter((b) => ehMarcada(b) && (b.ativo || form?.bonificacoes.some((x) => x.bonificacao_id === b.id)));
-  const automaticas = oficina.bonificacoes.filter((b) => b.ativo && !ehMarcada(b));
+  // Só as regras da folha da pessoa (as marcas de outras folhas ficam guardadas e voltam se ela voltar para lá).
+  const daFolha = form ? oficina.bonificacoes.filter((b) => valeNaFolha(b, form.folha_numero)) : oficina.bonificacoes;
+  const bonificacoesAtribuiveis = daFolha.filter((b) => ehMarcada(b) && (b.ativo || form?.bonificacoes.some((x) => x.bonificacao_id === b.id)));
+  const automaticas = daFolha.filter((b) => b.ativo && !ehMarcada(b));
   const dadosDasRegras = variaveisDa(oficina.campos, oficina.bonificacoes);
   // Campos que a empresa criou para o cadastro (ex.: número de filhos), usados pelas regras.
   const camposCadastro = oficina.campos.filter((c) => c.escopo === 'cadastro');
@@ -154,7 +156,7 @@ export default function FormFuncionario({ oficina, funcionarioId, folhaInicial, 
           <section className="painel" data-guia="func-bonificacoes">
             <div className="painel-titulo"><h3>Bonificações e comissão</h3></div>
             {bonificacoesAtribuiveis.length === 0 && (
-              <p className="mini">Esta empresa não tem bonificações para marcar no cadastro. Dá para criar na aba Regras.</p>
+              <p className="mini">{oficina.folhas.length > 1 ? 'Esta folha' : 'Esta empresa'} não tem bonificações para marcar no cadastro. Dá para criar na aba Regras.</p>
             )}
             {bonificacoesAtribuiveis.map((b) => {
               const atual = temBon(b.id);
