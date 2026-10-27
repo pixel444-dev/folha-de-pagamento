@@ -17,7 +17,7 @@
 
 ## O que o sistema faz
 
-| | |
+| Função | O que faz |
 |---|---|
 | 🧾 **Folha do mês** | Abre a folha com todos os funcionários ativos: salário, bonificações e parcelas de vales já calculados. Uma empresa pode ter várias folhas no mês (1ª, 2ª, 3ª…). |
 | 💸 **Vales** | Lança vales, inclusive parcelados, que são descontados sozinhos nas folhas seguintes. |
