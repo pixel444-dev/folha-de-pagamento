@@ -275,6 +275,11 @@ if (!colunas('lancamentos').includes('campos')) db.exec("ALTER TABLE lancamentos
 if (!colunas('lancamentos').includes('regras_manuais')) db.exec("ALTER TABLE lancamentos ADD COLUMN regras_manuais TEXT NOT NULL DEFAULT '{}'");
 // Nome da unidade do divisor do salário ("Dividir o salário por 22 dias"), que a empresa pode trocar.
 if (!colunas('oficinas').includes('divisor_nome')) db.exec("ALTER TABLE oficinas ADD COLUMN divisor_nome TEXT NOT NULL DEFAULT 'dias'");
+// Produção por peça: a tabela de cada pessoa no mês (referência, cliente, quantidade, valor da unidade) fica em
+// lancamentos.producao (lista JSON) e o total entra no pagamento. Liga por empresa em Regras → Cálculo básico.
+// O código anterior ignora as duas colunas (se o atualizador voltar a versão, a produção só deixa de ser paga).
+if (!colunas('oficinas').includes('usa_producao')) db.exec('ALTER TABLE oficinas ADD COLUMN usa_producao INTEGER NOT NULL DEFAULT 0');
+if (!colunas('lancamentos').includes('producao')) db.exec("ALTER TABLE lancamentos ADD COLUMN producao TEXT NOT NULL DEFAULT '[]'");
 
 if (db.prepare('SELECT COUNT(*) AS n FROM oficinas').get().n === 0) {
   tx(() => semear(db));

@@ -3,7 +3,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { calcularLancamento, parcelasDoMes, somarResultados, valorDoDia } from './calculo.js';
+import { calcularLancamento, calcularProducao, parcelasDoMes, somarResultados, valorDoDia } from './calculo.js';
 import { parseHoras, parseNum, fmtHoras, porExtenso } from './formato.js';
 
 const sitio = { divisor_dias: 22, arredondar_dia: true, horas_por_dia: 9, valor_hora_extra: 7, sabado_modo: 'diaria', sabado_valor: 0 };
@@ -171,4 +171,44 @@ test('leitura de números e horas', () => {
   assert.equal(fmtHoras(1.5), '1h30');
   assert.equal(fmtHoras(67), '67h');
   assert.equal(fmtHoras(0.5), '30min');
+});
+
+test('produção por peça: total de cada linha, soma do mês e entra no pagamento', () => {
+  const producao = [
+    { referencia: '1020', cliente: 'Loja A', quantidade: 500, valor: 1 },
+    { referencia: '2030', cliente: 'Loja B', quantidade: 300, valor: 0.35 },
+    { referencia: '', cliente: '', quantidade: 0, valor: 0 },
+  ];
+  const p = calcularProducao(producao);
+  assert.deepEqual(p.linhas.map((x) => x.total), [500, 105, 0]);
+  assert.equal(p.total, 605);
+  assert.equal(p.pecas, 800);
+
+  const r = calcularLancamento(
+    { oficina: sitio, bonificacoes: [], funcionario: { salario: 0, bonificacoes: [] }, ano: 2026, mes: 11 },
+    { producao },
+  );
+  const item = r.proventos.find((x) => x.chave === 'producao');
+  assert.deepEqual(item, { chave: 'producao', rotulo: 'Produção', detalhe: '800 peças', valor: 605 });
+  assert.equal(r.liquido, 605);
+  assert.equal(r.resumo.producao, 605);
+  assert.equal(somarResultados([r, r]).producao, 1210);
+});
+
+test('produção soma com o salário e pode ser usada nas regras', () => {
+  const regra = {
+    id: 9, nome: 'Bônus produção', tipo: 'provento', ativo: true, valor: 10,
+    definicao: { quem: 'todos', calculo: { modo: 'percentual', base: 'producao' } },
+  };
+  const r = calcularLancamento(
+    { oficina: sitio, bonificacoes: [regra], funcionario: { salario: 1000, bonificacoes: [] }, ano: 2026, mes: 11 },
+    { producao: [{ referencia: '1', cliente: '', quantidade: 5000, valor: 1 }] },
+  );
+  assert.equal(r.total_proventos, 1000 + 5000 + 500);
+  // Sem tabela, nada muda; linha sem valor da unidade não paga.
+  const vazio = calcularLancamento({ oficina: sitio, funcionario: { salario: 1000, bonificacoes: [] }, ano: 2026, mes: 11 }, {
+    producao: [{ referencia: '1', quantidade: 10, valor: 0 }],
+  });
+  assert.equal(vazio.liquido, 1000);
+  assert.ok(!vazio.proventos.some((x) => x.chave === 'producao'));
 });

@@ -60,8 +60,22 @@ Na primeira vez que o sistema é aberto num computador, aparece um convite para 
    O sistema **lembra o mês e a folha** que você estava usando: se sair para outra aba (ou fechar e abrir o navegador) e voltar, continua no mesmo lugar. A aba **Ponto** segue o mesmo mês. Depois de 4 dias sem usar, volta a abrir no mês atual. Para ir direto ao mês de hoje, use **Voltar para o mês atual**, ao lado do mês.
 2. Clique em **Abrir folha**: todos os funcionários ativos daquela folha entram com salário, acréscimos, descontos e parcelas de vales.
 3. Lance **faltas** (dias, aceita 0,5), **sábados**, **horas extras** e **atrasos** (aceitam `1:30` ou `1h30`) e **comissão**.
-   Vales, compras e acréscimos (erro de folha, produção, meta…) ficam no botão **Ajustes** de cada pessoa.
+   Vales, compras e acréscimos (erro de folha, meta…) ficam no botão **Ajustes** de cada pessoa.
    Tudo é salvo automaticamente.
+
+   **Produção por peça:** se a empresa paga por peça, ligue em **Regras → Cálculo básico → Pagar produção por peça** (e clique em **Salvar cálculo básico**). A folha do mês ganha a coluna **Produção**. Clique no botão da pessoa (**+ Lançar**) para abrir a tabela dela no mês, igual ao papel:
+
+   | Referência | Cliente | Quant. | Valor unid. | Total |
+   |---|---|---|---|---|
+   | 1020 | Loja A | 500 | 1,00 | 500,00 |
+
+   - O **total de cada linha** (quantidade × valor da unidade) e o **total do mês** são calculados sozinhos.
+   - O total do mês **entra no pagamento** da pessoa, como a linha **Produção** no card (ex.: "Produção · 5.000 peças"). Se a pessoa também tem salário, a produção soma com ele.
+   - Ao digitar uma **referência já usada**, o sistema sugere o nome e preenche o **valor da unidade** com o último valor usado (para o mesmo cliente, se tiver). Dá para mudar.
+   - **Enter** no valor da unidade vai para a próxima linha (cria uma nova no fim). O **×** apaga a linha.
+   - Também dá para abrir a tabela pelo botão **Ajustes** da pessoa (parte **Produção**).
+   - Com a folha fechada, a tabela fica guardada e pode ser vista, mas não mudada (a não ser que a folha seja reaberta). O **Histórico** mostra a linha **Produção** em cada mês.
+   - Nas regras dá para usar **Produção (R$)** e **Peças da produção** (ex.: bônus de 5% sobre a produção, ou prêmio para quem passar de 3.000 peças).
 4. **Imprimir cards** abre os cards em folhas A4. Marque também a **lista de conferência** para controlar os PIX pagos.
    Os cards ficam encostados uns nos outros: corte nas linhas tracejadas (marcadas com ✂) e cada corte já separa dois cards.
 

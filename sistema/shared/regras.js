@@ -33,6 +33,8 @@ export const VARIAVEIS = [
   { chave: 'horas_extras', rotulo: 'Horas extras', tipo: 'horas', grupo: 'mes' },
   { chave: 'horas_atraso', rotulo: 'Horas de atraso', tipo: 'horas', grupo: 'mes' },
   { chave: 'comissao', rotulo: 'Comissão', tipo: 'moeda', grupo: 'mes' },
+  { chave: 'producao', rotulo: 'Produção (R$)', tipo: 'moeda', grupo: 'mes' },
+  { chave: 'pecas_produzidas', rotulo: 'Peças da produção', tipo: 'numero', grupo: 'mes' },
   { chave: 'salario', rotulo: 'Salário', tipo: 'moeda', grupo: 'cadastro' },
   { chave: 'meses_de_casa', rotulo: 'Meses de casa', tipo: 'numero', grupo: 'cadastro' },
   { chave: 'anos_de_casa', rotulo: 'Anos de casa', tipo: 'numero', grupo: 'cadastro' },

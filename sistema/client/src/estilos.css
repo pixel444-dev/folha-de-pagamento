@@ -494,6 +494,13 @@ select.campo { padding-right: 6px; }
 .tabela .clicavel { cursor: pointer; }
 .tabela .campo-num { height: 32px; width: 60px; padding: 0 7px; }
 .tabela .campo-num.largo { width: 84px; }
+/* Tabela de produção (referência, cliente, quantidade, valor da unidade, total) */
+.tabela-producao td { padding: 5px 6px; }
+.tabela-producao .campo { height: 32px; padding: 0 8px; }
+.tabela-producao td:first-child { width: 140px; }
+.tabela-producao .campo-num.largo { width: 92px; }
+.tabela-producao .total-linha { font-weight: 600; white-space: nowrap; min-width: 84px; }
+.btn-producao { min-width: 92px; justify-content: flex-end; font-variant-numeric: tabular-nums; }
 .col-nome { min-width: 150px; }
 .nome-func { font-weight: 600; display: block; background: none; border: 0; padding: 0; cursor: pointer; text-align: left; }
 .nome-func:hover { text-decoration: underline; }

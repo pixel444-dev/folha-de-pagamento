@@ -4,13 +4,15 @@ import { api } from '../api.js';
 import Gaveta from '../componentes/Gaveta.jsx';
 import CardPagamento from '../componentes/CardPagamento.jsx';
 import { Campo, CampoNumero } from '../componentes/Campos.jsx';
-import { parcelasDoMes } from '@shared/calculo.js';
-import { brl, competencia, rotuloFolha, valor } from '@shared/formato.js';
+import { calcularProducao, parcelasDoMes } from '@shared/calculo.js';
+import { brl, competencia, fmtQtd, rotuloFolha, valor } from '@shared/formato.js';
 import { situacaoDaRegra, temCondicoes } from '@shared/regras.js';
 
 const SUGESTOES_ACRESCIMO = ['Erro de folha', 'Produção', 'Meta', 'Ajuste do mês anterior'];
 
-export default function DetalheLancamento({ lancamento: l, oficina, folha, ano, mes, aberta, aoMudar, aoRemover, aoImprimir, aoFechar, aoLancarVale }) {
+export default function DetalheLancamento({
+  lancamento: l, oficina, folha, ano, mes, aberta, aoMudar, aoRemover, aoImprimir, aoFechar, aoLancarVale, aoAbrirProducao,
+}) {
   const f = l.funcionario;
   const r = l.resultado;
   const campos = (oficina.campos || []).filter((c) => c.escopo !== 'cadastro');
@@ -181,6 +183,8 @@ export default function DetalheLancamento({ lancamento: l, oficina, folha, ano, 
         </>
       )}
 
+      {aoAbrirProducao && (aberta || l.producao?.length > 0) && <ResumoProducao producao={l.producao} aberta={aberta} aoAbrir={aoAbrirProducao} />}
+
       <section data-guia="ajustes-previa">
         <div className="painel-titulo"><h3>Prévia do card</h3></div>
         <div className="previa-card">
@@ -188,6 +192,26 @@ export default function DetalheLancamento({ lancamento: l, oficina, folha, ano, 
         </div>
       </section>
     </Gaveta>
+  );
+}
+
+/** Resumo da tabela de produção do mês, com o botão que abre a tabela. */
+function ResumoProducao({ producao, aberta, aoAbrir }) {
+  const { pecas, total } = calcularProducao(producao);
+  return (
+    <section className="painel">
+      <div className="painel-titulo">
+        <h3>Produção</h3>
+        <button className="btn btn-p" onClick={aoAbrir}>{aberta ? 'Abrir tabela de produção' : 'Ver tabela de produção'}</button>
+      </div>
+      {total || pecas ? (
+        <div className="lista-simples">
+          <div><span>{fmtQtd(pecas)} {pecas === 1 ? 'peça' : 'peças'} no mês</span><span className="num">{valor(total)}</span></div>
+        </div>
+      ) : (
+        <p className="itens-vazio">Nenhuma produção lançada neste mês.</p>
+      )}
+    </section>
   );
 }
 

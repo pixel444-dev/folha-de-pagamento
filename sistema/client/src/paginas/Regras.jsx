@@ -707,11 +707,11 @@ function TesteRegra({ form, oficina, funcionarios, lista }) {
     admissao: `${inicio.getFullYear()}-${String(inicio.getMonth() + 1).padStart(2, '0')}-01`,
     bonificacoes: [...pessoa.marcas, ...(pessoa.marcado ? [{ bonificacao_id: idTeste, valor: pessoa.proprio }] : [])],
   };
-  const lancamento = { campos: {} };
+  const lancamento = { campos: {}, resumo_producao: { total: mesTeste.producao ?? 0, pecas: mesTeste.pecas_produzidas ?? 0 } };
   for (const [k, v] of Object.entries(mesTeste)) {
     const m = /^campo:(\d+)$/.exec(k);
     if (m) lancamento.campos[m[1]] = v;
-    else lancamento[k] = v;
+    else if (k !== 'producao' && k !== 'pecas_produzidas') lancamento[k] = v;
   }
   const r = calcularLancamento({ oficina, bonificacoes: regras, funcionario, parcelamentos: [], ano, mes, explicar: true }, lancamento);
   const a = r.avaliacoes[idTeste];
@@ -835,6 +835,7 @@ function CalculoBasico({ oficina, recarregar }) {
     horas_por_dia: oficina.horas_por_dia,
     sabado_modo: oficina.sabado_modo,
     sabado_valor: oficina.sabado_valor,
+    usa_producao: !!oficina.usa_producao,
   });
   const [estado, enviar] = useEnvio(recarregar);
   const mudar = (p) => setForm((f) => ({ ...f, ...p }));
@@ -887,6 +888,16 @@ function CalculoBasico({ oficina, recarregar }) {
             <CampoNumero tipo="moeda" valor={form.sabado_valor} aoMudar={(v) => mudar({ sabado_valor: v })} />
           </Campo>
         )}
+        <label className="caixa-marcar inteiro">
+          <input type="checkbox" checked={form.usa_producao} onChange={(e) => mudar({ usa_producao: e.target.checked })} />
+          <span>
+            <strong>Pagar produção por peça</strong>
+            <small>
+              A folha do mês ganha a coluna Produção: para cada pessoa, uma tabela com referência, cliente, quantidade e valor da
+              unidade. O total entra no pagamento.
+            </small>
+          </span>
+        </label>
       </div>
       <div className="acoes-form">
         <Mensagem estado={estado} />

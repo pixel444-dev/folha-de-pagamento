@@ -85,6 +85,7 @@ function carregarOficina(oficinaId) {
   const o = comum(db.prepare('SELECT * FROM oficinas WHERE id = ?').get(oficinaId));
   if (!o) return null;
   o.arredondar_dia = !!o.arredondar_dia;
+  o.usa_producao = !!o.usa_producao;
   o.folhas = db.prepare('SELECT numero, apelido, dia_fechamento FROM folhas WHERE oficina_id = ? AND excluida = 0 ORDER BY numero')
     .all(oficinaId).map(comum);
   // Regras de pagamento (shared/regras.js); a definição vem sempre completa, mesmo nas bonificações antigas.
@@ -174,6 +175,7 @@ function lerLancamento(l) {
   const r = comum(l);
   r.acrescimos = lerJson(r.acrescimos, []);
   r.descontos = lerJson(r.descontos, []);
+  r.producao = lerJson(r.producao, []);
   r.campos = lerJson(r.campos, {});
   r.regras_manuais = lerJson(r.regras_manuais, {});
   r.pular_parcelas = !!r.pular_parcelas;
@@ -351,10 +353,11 @@ app.put('/api/oficinas/:id', (req, res) => {
   if (divisor <= 0) falhar(400, 'O divisor de dias precisa ser maior que zero.');
   if (horas <= 0) falhar(400, 'As horas por dia precisam ser maiores que zero.');
   const divisorNome = b.divisor_nome === undefined ? o.divisor_nome : String(b.divisor_nome ?? '').trim().slice(0, 30) || 'dias';
+  const usaProducao = b.usa_producao === undefined ? o.usa_producao : !!b.usa_producao;
   db.prepare(`UPDATE oficinas SET valor_hora_extra = ?, divisor_dias = ?, divisor_nome = ?, arredondar_dia = ?, horas_por_dia = ?,
-      sabado_modo = ?, sabado_valor = ? WHERE id = ?`)
+      sabado_modo = ?, sabado_valor = ?, usa_producao = ? WHERE id = ?`)
     .run(numero(b.valor_hora_extra, o.valor_hora_extra), divisor, divisorNome, b.arredondar_dia ? 1 : 0, horas,
-      sabadoModo, numero(b.sabado_valor, 0), o.id);
+      sabadoModo, numero(b.sabado_valor, 0), usaProducao ? 1 : 0, o.id);
   res.json(carregarOficina(o.id));
 });
 
@@ -888,6 +891,18 @@ function itensValidos(lista, comTipo) {
   }));
 }
 
+/** Tabela de produção do mês: linhas { referencia, cliente, quantidade, valor da unidade }; linhas em branco não são guardadas. */
+function producaoValida(lista) {
+  if (!Array.isArray(lista)) return '[]';
+  const linhas = lista.slice(0, 500).map((x) => ({
+    referencia: String(x?.referencia ?? '').trim().slice(0, 40),
+    cliente: String(x?.cliente ?? '').trim().slice(0, 60),
+    quantidade: Math.max(0, numero(x?.quantidade)),
+    valor: Math.max(0, numero(x?.valor)),
+  })).filter((x) => x.referencia || x.cliente || x.quantidade || x.valor);
+  return JSON.stringify(linhas);
+}
+
 app.patch('/api/lancamentos/:id', (req, res) => {
   const atual = db.prepare('SELECT * FROM lancamentos WHERE id = ?').get(id(req.params.id)) || falhar(404, 'Lançamento não encontrado.');
   exigirAberta(atual.folha_mensal_id);
@@ -913,6 +928,7 @@ app.patch('/api/lancamentos/:id', (req, res) => {
   }
   if ('acrescimos' in b) campos.acrescimos = itensValidos(b.acrescimos, false);
   if ('descontos' in b) campos.descontos = itensValidos(b.descontos, true);
+  if ('producao' in b) campos.producao = producaoValida(b.producao);
   if ('pular_parcelas' in b) campos.pular_parcelas = b.pular_parcelas ? 1 : 0;
   if ('observacao' in b) campos.observacao = textoOuNulo(b.observacao);
   const chaves = Object.keys(campos);
@@ -920,6 +936,34 @@ app.patch('/api/lancamentos/:id', (req, res) => {
     db.prepare(`UPDATE lancamentos SET ${chaves.map((c) => `${c} = ?`).join(', ')} WHERE id = ?`).run(...chaves.map((c) => campos[c]), atual.id);
   }
   res.json(lerLancamento(db.prepare('SELECT * FROM lancamentos WHERE id = ?').get(atual.id)));
+});
+
+/**
+ * Referências e clientes já lançados na produção da empresa, com o último valor da unidade usado
+ * (para a tabela de produção sugerir e preencher sozinha). Do mais recente para o mais antigo.
+ */
+app.get('/api/oficinas/:id/producao/referencias', (req, res) => {
+  const o = oficinaOu404(req.params.id);
+  const linhas = db.prepare(`SELECT json_extract(j.value, '$.referencia') AS referencia, json_extract(j.value, '$.cliente') AS cliente,
+      json_extract(j.value, '$.valor') AS valor
+    FROM lancamentos l JOIN folhas_mensais fm ON fm.id = l.folha_mensal_id,
+      json_each(CASE WHEN json_valid(l.producao) THEN l.producao ELSE '[]' END) j
+    WHERE fm.oficina_id = ? AND l.producao <> '[]'
+    ORDER BY fm.ano DESC, fm.mes DESC, l.id DESC, j.key DESC`).all(o.id);
+  const vistos = new Set();
+  const lista = [];
+  for (const x of linhas) {
+    const referencia = String(x.referencia ?? '').trim();
+    const cliente = String(x.cliente ?? '').trim();
+    const valor = numero(x.valor);
+    if (!referencia || !(valor > 0)) continue;
+    const chave = `${referencia.toLowerCase()}|${cliente.toLowerCase()}`;
+    if (vistos.has(chave)) continue;
+    vistos.add(chave);
+    lista.push({ referencia, cliente, valor });
+    if (lista.length >= 2000) break;
+  }
+  res.json(lista);
 });
 
 app.delete('/api/lancamentos/:id', (req, res) => {

@@ -4,6 +4,7 @@ import { api } from '../api.js';
 import { guardarMes, mesDaTela } from '../mesEscolhido.js';
 import { CampoNumero } from '../componentes/Campos.jsx';
 import DetalheLancamento from './DetalheLancamento.jsx';
+import ProducaoLancamento from './ProducaoLancamento.jsx';
 import { calcularLancamento, somarResultados } from '@shared/calculo.js';
 import { brl, competencia, fmtHoras, fmtQtd, rotuloFolha, valor } from '@shared/formato.js';
 import { formatarDado, situacaoDaRegra, temCondicoes } from '@shared/regras.js';
@@ -82,6 +83,7 @@ export default function FolhaMes() {
   const [erro, setErro] = useState(null);
   const [ocupado, setOcupado] = useState(false);
   const [detalheId, setDetalheId] = useState(null);
+  const [producaoId, setProducaoId] = useState(null);
   const salvamento = useSalvamento(setErro);
 
   const fmAtual = situacao?.find((s) => s.numero === folhaNum)?.folha_mensal;
@@ -99,6 +101,7 @@ export default function FolhaMes() {
       setCarregando(true);
       setErro(null);
       setDetalheId(null);
+      setProducaoId(null);
       try {
         await salvamento.enviar();
         const s = await carregarSituacao();
@@ -164,6 +167,30 @@ export default function FolhaMes() {
   const regrasCondicionais = dados ? dados.oficina.bonificacoes.filter((b) => b.ativo && temCondicoes(b)) : [];
   const temComissao = linhas.some((l) => l.funcionario.comissionado || l.comissao);
   const colunasVisiveis = COLUNAS_EDITAVEIS.filter((c) => c !== 'comissao' || temComissao);
+  // Produção por peça: coluna ligada em Regras → Cálculo básico (ou se alguém já tem produção nesta folha).
+  const temProducao = !!dados && (dados.oficina.usa_producao || linhas.some((l) => l.producao?.length));
+
+  // Referências já usadas na produção da empresa, com o último valor da unidade (a tabela preenche sozinha).
+  // Recarrega ao trocar de folha e ao fechar a tabela; o que acabou de ser digitado nesta folha vem na frente.
+  const [refsSalvas, setRefsSalvas] = useState([]);
+  const fmId = dados?.folha_mensal.id;
+  useEffect(() => {
+    if (!temProducao || producaoId) return undefined;
+    let vivo = true;
+    salvamento.enviar()
+      .then(() => api.get(`/oficinas/${oficina.id}/producao/referencias`))
+      .then((s) => vivo && setRefsSalvas(s))
+      .catch(() => {});
+    return () => {
+      vivo = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [oficina.id, fmId, temProducao, producaoId]);
+  const sugestoesProducao = useMemo(() => {
+    if (!producaoId) return [];
+    const daFolha = linhas.flatMap((l) => (l.producao || []).filter((x) => String(x.referencia || '').trim() && x.valor > 0)).reverse();
+    return [...daFolha, ...refsSalvas];
+  }, [producaoId, linhas, refsSalvas]);
 
   const atualizar = useCallback((id, patch) => {
     setDados((d) => ({ ...d, lancamentos: d.lancamentos.map((l) => (l.id === id ? { ...l, ...patch } : l)) }));
@@ -224,6 +251,7 @@ export default function FolhaMes() {
     executar(async () => {
       await api.del(`/lancamentos/${l.id}`);
       setDetalheId(null);
+      setProducaoId(null);
       setDados(await api.get(`/folhas-mensais/${dados.folha_mensal.id}`));
       await carregarSituacao();
     });
@@ -248,6 +276,11 @@ export default function FolhaMes() {
 
   const folhaInfo = oficina.folhas.find((f) => f.numero === folhaNum);
   const detalhe = linhas.find((l) => l.id === detalheId);
+  const producao = linhas.find((l) => l.id === producaoId);
+  const abrirProducao = (l) => {
+    setDetalheId(null);
+    setProducaoId(l.id);
+  };
 
   return (
     <>
@@ -389,6 +422,7 @@ export default function FolhaMes() {
                   <th className="dir">Hora extra<span className="th-dica">h:mm</span></th>
                   <th className="dir">Atrasos<span className="th-dica">h:mm</span></th>
                   {temComissao && <th className="dir">Comissão<span className="th-dica">R$</span></th>}
+                  {temProducao && <th className="dir">Produção<span className="th-dica">R$</span></th>}
                   {campos.map((c) => (
                     <th key={`c${c.id}`} className={c.tipo === 'sim_nao' ? 'centro' : 'dir'}>
                       {c.nome}{DICA_CAMPO[c.tipo] && <span className="th-dica">{DICA_CAMPO[c.tipo]}</span>}
@@ -439,6 +473,11 @@ export default function FolhaMes() {
                           )}
                         </td>
                       ))}
+                      {temProducao && (
+                        <td className="dir">
+                          <CelulaProducao lancamento={l} aberta={aberta} aoAbrir={() => abrirProducao(l)} />
+                        </td>
+                      )}
                       {campos.map((c) => (
                         <td key={`c${c.id}`} className={c.tipo === 'sim_nao' ? 'centro' : 'dir'}>
                           <CampoDoMes
@@ -483,7 +522,9 @@ export default function FolhaMes() {
                   <tr>
                     <td>Total ({totais.funcionarios})</td>
                     <td className="dir num">{valor(totais.salario)}</td>
-                    <td colSpan={colunasVisiveis.length + campos.length + regrasCondicionais.length} />
+                    <td colSpan={colunasVisiveis.length} />
+                    {temProducao && <td className="dir num">{valor(totais.producao)}</td>}
+                    {campos.length + regrasCondicionais.length > 0 && <td colSpan={campos.length + regrasCondicionais.length} />}
                     <td className="dir num">{valor(totais.total_proventos)}</td>
                     <td className="dir num">− {valor(totais.total_descontos)}</td>
                     <td className="dir num">{valor(totais.liquido)}</td>
@@ -513,7 +554,20 @@ export default function FolhaMes() {
               aoRemover={() => removerDaFolha(detalhe)}
               aoLancarVale={recarregarFolha}
               aoImprimir={() => imprimir(detalhe.funcionario_id)}
+              aoAbrirProducao={temProducao ? () => abrirProducao(detalhe) : null}
               aoFechar={() => setDetalheId(null)}
+            />
+          )}
+          {producao && (
+            <ProducaoLancamento
+              lancamento={producao}
+              sugestoes={sugestoesProducao}
+              folha={dados.folha}
+              ano={dados.folha_mensal.ano}
+              mes={dados.folha_mensal.mes}
+              aberta={aberta}
+              aoMudar={(patch) => atualizar(producao.id, patch)}
+              aoFechar={() => setProducaoId(null)}
             />
           )}
           <p className="mini" style={{ marginTop: 6 }}>
@@ -522,6 +576,23 @@ export default function FolhaMes() {
         </>
       )}
     </>
+  );
+}
+
+/** Total da produção da pessoa no mês; clicando, abre a tabela (referência, cliente, quantidade, valor). */
+function CelulaProducao({ lancamento: l, aberta, aoAbrir }) {
+  const total = l.resultado.resumo?.producao || 0;
+  const nome = l.funcionario.nome;
+  if (!aberta && !l.producao?.length) return <span className="sem-valor">—</span>;
+  return (
+    <button
+      className={`btn btn-p btn-producao ${total ? 'num' : ''}`}
+      onClick={aoAbrir}
+      aria-label={`Produção de ${nome}`}
+      title={aberta ? 'Abrir a tabela de produção' : 'Ver a tabela de produção'}
+    >
+      {total || l.producao?.length ? valor(total) : aberta ? '+ Lançar' : 'Ver'}
+    </button>
   );
 }
 

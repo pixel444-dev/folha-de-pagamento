@@ -89,6 +89,29 @@ export function parcelasDoMes(vales = [], ano, mes) {
 
 const CATEGORIA_DESCONTO = { vale: 'vales', compra: 'compras' };
 
+/**
+ * Produção por peça do mês: cada linha é { referencia, cliente, quantidade, valor } (valor = R$ da unidade).
+ * Devolve as linhas com o total de cada uma (quantidade × valor, em centavos) e as somas.
+ */
+export function calcularProducao(lista = []) {
+  const linhas = (Array.isArray(lista) ? lista : []).map((x) => {
+    const quantidade = Math.max(0, n(x?.quantidade));
+    const unidade = Math.max(0, n(x?.valor));
+    return {
+      referencia: String(x?.referencia ?? ''),
+      cliente: String(x?.cliente ?? ''),
+      quantidade,
+      valor: unidade,
+      total: round2(quantidade * unidade),
+    };
+  });
+  return {
+    linhas,
+    pecas: Math.round(linhas.reduce((s, x) => s + x.quantidade, 0) * 1000) / 1000,
+    total: round2(linhas.reduce((s, x) => s + x.total, 0)),
+  };
+}
+
 /** Meses completos de empresa no fim do mês da folha (admissão "2025-03-10"). Sem admissão = 0. */
 export function mesesDeCasa(admissao, ano, mes) {
   const m = /^(\d{4})-(\d{2})/.exec(admissao || '');
@@ -116,6 +139,8 @@ export function variaveisDoLancamento(ctx, l = {}) {
     horas_extras: Math.max(0, n(l.horas_extras)),
     horas_atraso: Math.max(0, n(l.horas_atraso)),
     comissao: round2(l.comissao),
+    producao: 0,
+    pecas_produzidas: 0,
     meses_de_casa: meses,
     anos_de_casa: Math.floor(meses / 12),
     comissionado: funcionario.comissionado ? 1 : 0,
@@ -123,6 +148,10 @@ export function variaveisDoLancamento(ctx, l = {}) {
     dias_trabalhados: Math.max(0, divisor - faltas),
     mes: n(mes),
   };
+  // Total da tabela de produção do mês; o teste das regras (tela Regras) manda só os totais, em resumo_producao.
+  const producao = l.resumo_producao || calcularProducao(l.producao);
+  v.producao = round2(Math.max(0, n(producao.total)));
+  v.pecas_produzidas = Math.max(0, n(producao.pecas));
   for (const fonte of [funcionario.campos, l.campos]) {
     for (const [campoId, x] of Object.entries(fonte || {})) v[`campo:${campoId}`] = n(x);
   }
@@ -135,7 +164,7 @@ export function variaveisDoLancamento(ctx, l = {}) {
  * ctx = { oficina, bonificacoes, funcionario, parcelamentos, ano, mes, explicar }
  *       (bonificacoes = regras de pagamento da empresa, na ordem da lista; ver regras.js.
  *        explicar = true devolve também como cada regra foi avaliada, para o teste da tela de regras)
- * l   = lançamento do mês { faltas, sabados, horas_extras, horas_atraso, comissao, campos {},
+ * l   = lançamento do mês { faltas, sabados, horas_extras, horas_atraso, comissao, campos {}, producao [],
  *                           regras_manuais { [regraId]: 'sim' | 'nao' | null }, acrescimos[], descontos[], pular_parcelas }
  */
 export function calcularLancamento(ctx, l = {}) {
@@ -144,6 +173,7 @@ export function calcularLancamento(ctx, l = {}) {
   const variaveis = variaveisDoLancamento(ctx, l);
   const {
     salario, valor_dia: vDia, valor_hora: vHora, faltas, sabados, horas_extras: horasExtras, horas_atraso: horasAtraso, comissao,
+    producao, pecas_produzidas: pecas,
   } = variaveis;
 
   const resumo = {
@@ -153,6 +183,7 @@ export function calcularLancamento(ctx, l = {}) {
     sabado: 0,
     hora_extra: 0,
     comissao: 0,
+    producao: 0,
     acrescimos: 0,
     faltas: 0,
     atrasos: 0,
@@ -174,7 +205,7 @@ export function calcularLancamento(ctx, l = {}) {
   Object.assign(variaveis, {
     valor_sabados: sabado, valor_horas_extras: horaExtra, acrescimos: somaAcrescimos, valor_faltas: valorFaltas, valor_atrasos: valorAtrasos,
   });
-  let somaProventos = salario + sabado + horaExtra + comissao + somaAcrescimos;
+  let somaProventos = salario + sabado + horaExtra + comissao + producao + somaAcrescimos;
   let somaDescontos = valorFaltas + valorAtrasos + itens.reduce((s, d) => s + d.valor, 0);
 
   // Regras de pagamento da empresa (regras.js), de cima para baixo: cada uma vê os totais "até aqui"
@@ -213,7 +244,7 @@ export function calcularLancamento(ctx, l = {}) {
     somaProventos += v;
   }
 
-  // Ordem no card: salário, regras que somam, sábados, hora extra, comissão, acréscimos;
+  // Ordem no card: salário, regras que somam, sábados, hora extra, comissão, produção, acréscimos;
   // faltas, atrasos, regras que descontam, vales e outros descontos.
   const proventos = [{ chave: 'salario', rotulo: 'Salário', valor: salario }, ...proventosRegras];
   if (sabado) {
@@ -227,6 +258,10 @@ export function calcularLancamento(ctx, l = {}) {
   if (comissao) {
     proventos.push({ chave: 'comissao', rotulo: 'Comissão', valor: comissao });
     resumo.comissao = comissao;
+  }
+  if (producao) {
+    proventos.push({ chave: 'producao', rotulo: 'Produção', detalhe: `${fmtQtd(pecas)} ${pecas === 1 ? 'peça' : 'peças'}`, valor: producao });
+    resumo.producao = producao;
   }
   for (const a of acrescimos) proventos.push({ chave: 'acrescimo', rotulo: a.rotulo, valor: a.valor });
   resumo.acrescimos = somaAcrescimos;
@@ -289,6 +324,7 @@ export function somarResultados(resultados) {
     sabado: 0,
     hora_extra: 0,
     comissao: 0,
+    producao: 0,
     acrescimos: 0,
     faltas: 0,
     atrasos: 0,

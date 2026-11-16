@@ -10,6 +10,7 @@ const LINHAS_PROVENTOS = [
   ['sabado', 'Sábados'],
   ['hora_extra', 'Horas extras'],
   ['comissao', 'Comissões'],
+  ['producao', 'Produção'],
   ['acrescimos', 'Acréscimos'],
 ];
 const LINHAS_DESCONTOS = [
