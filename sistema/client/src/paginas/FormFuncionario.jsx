@@ -154,9 +154,9 @@ export default function FormFuncionario({ oficina, funcionarioId, folhaInicial, 
           </section>
 
           <section className="painel" data-guia="func-bonificacoes">
-            <div className="painel-titulo"><h3>Bonificações e comissão</h3></div>
+            <div className="painel-titulo"><h3>Acréscimos, descontos e comissão</h3></div>
             {bonificacoesAtribuiveis.length === 0 && (
-              <p className="mini">{oficina.folhas.length > 1 ? 'Esta folha' : 'Esta empresa'} não tem bonificações para marcar no cadastro. Dá para criar na aba Regras.</p>
+              <p className="mini">{oficina.folhas.length > 1 ? 'Esta folha' : 'Esta empresa'} não tem acréscimos nem descontos para marcar no cadastro. Dá para criar na aba Regras.</p>
             )}
             {bonificacoesAtribuiveis.map((b) => {
               const atual = temBon(b.id);
@@ -166,7 +166,7 @@ export default function FormFuncionario({ oficina, funcionarioId, folhaInicial, 
                     <input type="checkbox" checked={!!atual} onChange={(e) => alternarBon(b.id, e.target.checked)} />
                     <span>
                       <strong>{b.nome}{!b.ativo && ' (desativada)'}</strong>
-                      <small>{b.tipo === 'desconto' ? 'Desconta' : 'Valor padrão'}: {descreverCalculo(definicaoDaRegra(b), b.valor, dadosDasRegras)}</small>
+                      <small>{b.tipo === 'desconto' ? 'Desconta' : 'Soma'}: {descreverCalculo(definicaoDaRegra(b), b.valor, dadosDasRegras)}</small>
                     </span>
                   </label>
                   {atual && definicaoDaRegra(b).calculo.modo !== 'faixas' && (

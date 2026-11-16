@@ -86,7 +86,7 @@ export default function Funcionarios() {
               <th>Função</th>
               <th>Folha</th>
               <th className="dir">Salário</th>
-              <th>Bonificações</th>
+              <th>Acréscimos e descontos</th>
               <th>Chave PIX</th>
               <th />
             </tr>
@@ -110,7 +110,12 @@ export default function Funcionarios() {
                       const c = definicaoDaRegra(bon).calculo;
                       const proprio = b.valor == null ? '' : c.modo === 'percentual' ? ` ${fmtQtd(b.valor)}%`
                         : c.modo === 'fixo' || c.unidade === 'reais' ? ` ${valor(b.valor)}` : ` ${fmtQtd(b.valor)}`;
-                      return <span key={b.bonificacao_id} className="chip">{bon.nome}{proprio}</span>;
+                      const desconta = bon.tipo === 'desconto';
+                      return (
+                        <span key={b.bonificacao_id} className={`chip ${desconta ? 'chip-vermelho' : 'chip-verde'}`} title={desconta ? 'Desconta do salário' : 'Soma ao salário'}>
+                          {desconta ? '− ' : '+ '}{bon.nome}{proprio}
+                        </span>
+                      );
                     })}
                     {f.comissionado && <span className="chip chip-ambar">Comissão</span>}
                     {f.parcelamentos.some((v) => v.saldo > 0) && (

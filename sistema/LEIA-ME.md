@@ -57,7 +57,7 @@ Na primeira vez que o sistema é aberto num computador, aparece um convite para 
 ## Como fazer a folha do mês
 
 1. Entre na empresa (menu da esquerda), aba **Folha do mês**, escolha o mês e a folha (1ª, 2ª, 3ª…).
-2. Clique em **Abrir folha**: todos os funcionários ativos daquela folha entram com salário, bonificações e parcelas de vales.
+2. Clique em **Abrir folha**: todos os funcionários ativos daquela folha entram com salário, acréscimos, descontos e parcelas de vales.
 3. Lance **faltas** (dias, aceita 0,5), **sábados**, **horas extras** e **atrasos** (aceitam `1:30` ou `1h30`) e **comissão**.
    Vales, compras e acréscimos (erro de folha, produção, meta…) ficam no botão **Ajustes** de cada pessoa.
    Tudo é salvo automaticamente.
@@ -79,7 +79,7 @@ Na primeira vez que o sistema é aberto num computador, aparece um convite para 
 | Atraso / saída antecipada | horas × (valor do dia ÷ horas por dia; padrão 8 h) |
 | Hora extra | horas × valor da hora extra (padrão R$ 7,00) |
 | Sábado | um dia de salário (padrão) ou um valor fixo por sábado |
-| Bonificações, prêmios e descontos | montados na aba **Regras**, para cada folha (veja abaixo). Ex.: zero falta, vale almoço. |
+| Acréscimos e descontos (bonificações, prêmios, INSS etc.) | montados na aba **Regras**, para cada folha (veja abaixo). Ex.: zero falta, vale almoço, INSS. Na lista de **Funcionários**, a coluna **Acréscimos e descontos** mostra em verde (+) o que soma e em vermelho (−) o que desconta. |
 | Vales | descontados sozinhos todo mês até quitar o saldo (aba Vales) |
 
 Todos os valores (hora extra, sábado, divisor e as regras da empresa) podem ser mudados na aba **Regras** de cada empresa, a qualquer hora. Valem para as folhas em andamento e as próximas; folhas fechadas não mudam. Ao lado do divisor dá para trocar o nome que aparece no lugar de "dias" (ex.: "dias úteis").

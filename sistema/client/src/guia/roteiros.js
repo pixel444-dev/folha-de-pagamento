@@ -151,7 +151,7 @@ export const ROTEIROS = [
       {
         alvo: 'func-tabela',
         titulo: 'A lista',
-        texto: 'Clique em qualquer linha para abrir o cadastro e mudar salário, bonificações ou PIX. As etiquetas mostram bonificações, comissão e vales. **Sem PIX** e **Sem QR Code** avisam o que falta preencher.',
+        texto: 'Clique em qualquer linha para abrir o cadastro e mudar salário, acréscimos, descontos ou PIX. Na coluna **Acréscimos e descontos**, as etiquetas verdes (+) somam ao salário, as vermelhas (−) descontam (ex.: INSS), e também aparecem comissão e saldo de vales. **Sem PIX** e **Sem QR Code** avisam o que falta preencher.',
       },
       {
         alvo: 'func-novo',
@@ -168,8 +168,8 @@ export const ROTEIROS = [
       {
         gaveta: true,
         alvo: 'func-bonificacoes',
-        titulo: 'Bonificações e comissão',
-        texto: 'Marque as bonificações que esta pessoa recebe (ex.: vale almoço). Dá para pôr um valor diferente só para ela. Marque **Recebe comissão** se ela ganha sobre vendas: isso abre a coluna Comissão na folha.',
+        titulo: 'Acréscimos, descontos e comissão',
+        texto: 'Marque o que vale para esta pessoa: o que soma (ex.: vale almoço) e o que desconta (ex.: INSS). Dá para pôr um valor diferente só para ela. Marque **Recebe comissão** se ela ganha sobre vendas: isso abre a coluna Comissão na folha.',
       },
       {
         gaveta: true,
