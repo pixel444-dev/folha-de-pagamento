@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
 import { api } from '../api.js';
+import { guardarMes, mesDaTela } from '../mesEscolhido.js';
 import Gaveta from '../componentes/Gaveta.jsx';
 import { competencia, fmtData, fmtHoras, fmtQtd, rotuloFolha } from '@shared/formato.js';
 
@@ -164,10 +165,9 @@ function HorarioOficina({ oficina, horario, aoSalvar }) {
 
 function Espelho({ oficina, info, aoVerPessoas }) {
   const [params, setParams] = useSearchParams();
-  const hoje = new Date();
-  const ano = Number(params.get('ano')) || hoje.getFullYear();
-  const mes = Number(params.get('mes')) || hoje.getMonth() + 1;
-  const folhaNum = oficina.folhas.some((f) => f.numero === Number(params.get('folha'))) ? Number(params.get('folha')) : oficina.folhas[0].numero;
+  const { ano, mes, folha: folhaNum } = mesDaTela(params, oficina);
+  // Lembra o mês e a folha para, ao sair da tela e voltar, continuar no mesmo lugar.
+  useEffect(() => guardarMes(oficina.id, { ano, mes, folha: folhaNum }), [oficina.id, ano, mes, folhaNum]);
   const [periodo, setPeriodo] = useState(null); // período escolhido à mão (null = o da folha)
   const [dados, setDados] = useState(null);
   const [erro, setErro] = useState(null);
