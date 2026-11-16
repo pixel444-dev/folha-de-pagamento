@@ -57,6 +57,7 @@ Na primeira vez que o sistema é aberto num computador, aparece um convite para 
 ## Como fazer a folha do mês
 
 1. Entre na empresa (menu da esquerda), aba **Folha do mês**, escolha o mês e a folha (1ª, 2ª, 3ª…).
+   O sistema **lembra o mês e a folha** que você estava usando: se sair para outra aba (ou fechar e abrir o navegador) e voltar, continua no mesmo lugar. A aba **Ponto** segue o mesmo mês. Depois de 4 dias sem usar, volta a abrir no mês atual. Para ir direto ao mês de hoje, use **Voltar para o mês atual**, ao lado do mês.
 2. Clique em **Abrir folha**: todos os funcionários ativos daquela folha entram com salário, bonificações e parcelas de vales.
 3. Lance **faltas** (dias, aceita 0,5), **sábados**, **horas extras** e **atrasos** (aceitam `1:30` ou `1h30`) e **comissão**.
    Vales, compras e acréscimos (erro de folha, produção, meta…) ficam no botão **Ajustes** de cada pessoa.
