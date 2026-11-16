@@ -12,6 +12,7 @@ import {
   db, tx, copiarBanco, backupAutomatico, copiasNaPasta, explicarErroPasta, lerConfig, gravarConfig, PASTA_BACKUPS, PASTA_DADOS,
 } from './db.js';
 import { instalarAcesso, temSenha } from './acesso.js';
+import { instalarMcp } from './mcp.js';
 import { calcularLancamento, round2, saldoVale, somarResultados } from '../shared/calculo.js';
 import { calcularEspelho, formatarHorario, lerAFD, lerHorario, periodoDaFolha, somarDias, sugerirFuncionario } from '../shared/ponto.js';
 import {
@@ -45,6 +46,8 @@ app.disable('x-powered-by');
 app.use(express.json({ limit: '4mb' }));
 app.get('/api/info', (req, res) => res.json({ ambiente: AMBIENTE, versao: VERSAO }));
 instalarAcesso(app);
+// Assistente de IA (MCP) em /mcp, com chave própria; as chaves são criadas na tela "Assistente de IA".
+instalarMcp(app, { porta: PORTA, versao: VERSAO });
 
 // ---------------------------------------------------------------- utilitários
 

@@ -15,6 +15,7 @@ import ReciboVale from './paginas/ReciboVale.jsx';
 import EspelhoPonto from './paginas/EspelhoPonto.jsx';
 import Entrar from './paginas/Entrar.jsx';
 import CopiasSeguranca from './paginas/CopiasSeguranca.jsx';
+import AssistenteIA from './paginas/AssistenteIA.jsx';
 import { BoasVindas, GuiaProvider, useGuia } from './guia/Guia.jsx';
 
 const OficinasCtx = createContext(null);
@@ -112,6 +113,7 @@ export default function App() {
               <Route path="configuracoes" element={<Configuracoes />} />
             </Route>
             <Route path="copias" element={<CopiasSeguranca />} />
+            <Route path="assistente-ia" element={<AssistenteIA />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
@@ -161,6 +163,7 @@ function Estrutura() {
             <span>Ajuda<small>Guias passo a passo</small></span>
           </button>
           <NavLink to="/copias" className="menu-item" data-guia="menu-copias">Cópias de segurança</NavLink>
+          <NavLink to="/assistente-ia" className="menu-item">Assistente de IA</NavLink>
           {sair && <button type="button" className="menu-item" onClick={sair}>Sair</button>}
           {info && <div className="versao">Versão {info.versao}</div>}
         </div>

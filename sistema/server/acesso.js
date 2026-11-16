@@ -61,6 +61,21 @@ const cookie = (req, valor, maxAgeS) =>
 // Tentativas erradas por endereço, para dificultar quem tenta adivinhar a senha.
 const tentativas = new Map();
 
+// Chamadas do assistente de IA (server/mcp.js): depois de conferir a chave dele, o próprio servidor chama a API
+// por dentro (127.0.0.1) com este segredo, que é sorteado a cada vez que o sistema liga e nunca sai do processo.
+export const SEGREDO_INTERNO = crypto.randomBytes(32).toString('hex');
+export const CABECALHO_INTERNO = 'x-folha-interno';
+const ENDERECOS_LOCAIS = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
+export const ehDesteComputador = (req) => ENDERECOS_LOCAIS.has(req.socket.remoteAddress || '');
+
+function chamadaInterna(req) {
+  const recebido = req.headers[CABECALHO_INTERNO];
+  if (typeof recebido !== 'string' || !ehDesteComputador(req)) return false;
+  const a = Buffer.from(recebido);
+  const b = Buffer.from(SEGREDO_INTERNO);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
 /** Rotas /api/sessao, /api/entrar e /api/sair + bloqueio das demais rotas /api sem login. */
 export function instalarAcesso(app) {
   app.get('/api/sessao', (req, res) => {
@@ -97,7 +112,9 @@ export function instalarAcesso(app) {
   });
 
   app.use('/api', (req, res, next) => {
-    if (!temSenha() || sessaoValida(req)) return next();
+    // Marca as chamadas do assistente de IA: algumas rotas (ex.: as chaves do assistente) recusam essas chamadas.
+    req.chamadaDoAssistente = chamadaInterna(req);
+    if (!temSenha() || sessaoValida(req) || req.chamadaDoAssistente) return next();
     res.status(401).json({ erro: 'Entre com a senha para continuar.', exigeLogin: true });
   });
 }

@@ -275,6 +275,42 @@ O sistema pode ficar no servidor da empresa, que fica ligado 24 horas. Os outros
 - **Cópias de segurança**: continuam automáticas em `sistema\dados\backups`, agora no servidor. Configure também a **segunda pasta** (veja "Onde ficam os dados") em outro disco, para ter as cópias em dois lugares.
 - **Desinstalar**: apague a tarefa "Folha de Pagamento" no Agendador de Tarefas e a regra "Folha de Pagamento" no Firewall do Windows.
 
+## Assistente de IA (MCP)
+
+Um agente de IA da empresa (Claude, ChatGPT, Copilot ou outro que aceite **MCP**, o padrão para ligar uma IA a um sistema) pode consultar a folha e fazer lançamentos, a pedido de quem está conversando com ele. Exemplos: *"quantos funcionários ativos tem a 2ª folha?"*, *"lança 1 falta e 2 horas extras para o João na folha de novembro"*, *"quanto falta o Pedro pagar do vale?"*.
+
+**Como ligar:**
+
+1. No sistema do **servidor**, clique em **Assistente de IA** (rodapé do menu da esquerda).
+2. Em **Nova chave**, dê um nome (ex.: "Assistente do RH"), escolha o que ele pode fazer e a validade, e clique em **Criar chave**.
+3. **Copie a chave na hora**: ela aparece uma vez só. Em **Como configurar no agente de IA** está pronto o texto para colar no agente (endereço `http://<IP do servidor>:3210/mcp` + a chave).
+4. O agente precisa rodar num computador que acessa o servidor (rede da empresa ou Tailscale).
+
+**O que o assistente pode fazer:**
+
+| Permissão | Pode |
+|---|---|
+| **Só consultar** | Ver empresas, funcionários, folhas do mês, histórico, vales e espelho de ponto. Não muda nada. |
+| **Consultar e lançar na folha** | Tudo acima e mais: abrir e fechar a folha do mês, lançar faltas, sábados, horas, comissão, acréscimos e descontos, incluir funcionários na folha, passar o ponto para a folha, cadastrar e alterar funcionários e lançar vales. |
+
+**Segurança (o que o sistema garante):**
+
+- **Sem chave, ninguém entra.** A chave fica guardada só "embaralhada" (o sistema não consegue mostrar de novo). Ela pode ter validade e pode ser **revogada** na hora, no botão **Revogar**. Crie uma chave para cada agente ou pessoa.
+- **O assistente nunca** apaga nada (empresa, funcionário, vale, folha), não reabre folha fechada, não mexe nas regras de pagamento, na senha, nas chaves do assistente nem nas cópias de segurança. Isso é feito só por uma pessoa, nas telas.
+- **PIX:** o assistente **não consegue mudar** chave PIX, titular nem banco de ninguém (golpe comum é trocar o PIX de um funcionário). E só **vê** as chaves PIX se a chave dele tiver a opção marcada; sem ela, aparecem como "oculto".
+- **Tudo fica registrado** em **O que o assistente fez**: quando, qual chave, o que pediu e se deu certo ou foi recusado.
+- Limite de 60 ações por minuto por chave. Depois de 10 chaves erradas seguidas, o computador que tentou fica bloqueado por 15 minutos.
+- Pedidos vindos de sites da internet (pelo navegador) são recusados.
+
+**Cuidados:**
+
+- Trate a chave como uma senha: não mande por e-mail ou grupo de mensagens.
+- Use só dentro da rede da empresa ou pelo Tailscale. **Nunca abra a porta 3210 para a internet.**
+- O agente passa a ver salários e dados dos funcionários. Use um serviço de IA com contrato que proteja esses dados (LGPD).
+- Peça para o agente confirmar com você antes de **fechar uma folha**. A maioria dos agentes já pergunta antes de cada ação que muda algo: deixe essa opção ligada.
+- IA pode errar: confira os lançamentos antes de fechar a folha. Se algo sair errado, o registro mostra o que foi feito.
+- Serviços de IA que rodam só na nuvem (sem nada instalado no computador da empresa) não conseguem chegar no servidor, que não fica na internet. Use um agente instalado num computador da empresa.
+
 ## Como atualizar o servidor (função nova ou correção)
 
 **No computador de testes**
@@ -333,6 +369,9 @@ sistema/
   shared/ponto.js       leitura do AFD do relógio (Portaria 1510 e 671) e regras do ponto + testes em ponto.test.js
   server/               API (Express) e banco SQLite (node:sqlite)
   server/acesso.js      senha e sessões (exigidas quando há senha definida)
+  server/mcp.js         assistente de IA: servidor MCP em POST /mcp (JSON-RPC, sem dependências), chaves
+                        (tabela mcp_chaves, só o hash) e registro (mcp_registro). As ferramentas chamam a
+                        própria API por 127.0.0.1 com um segredo interno sorteado a cada início + testes em mcp.test.js
   client/src/           telas em React
   client/src/guia/      guia passo a passo (botão Ajuda): roteiros.js tem os passos de cada parte, e cada passo
                         aponta para um data-guia nas telas + teste em roteiros.test.js (avisa se um sumir)
@@ -346,6 +385,6 @@ sistema/
 - `node server/index.js --rede`: modo **produção**. Aceita outros computadores (0.0.0.0) e só inicia se houver senha (`node server/definir-senha.js`). Sem `--rede` é a **versão de testes** (só 127.0.0.1, com faixa e marca d'água de testes).
 - `GET /api/info` devolve `{ ambiente: 'producao' | 'testes', versao }` (público, usado pela tela e pelo atualizador).
 
-- `npm test`: testes das regras de cálculo, das regras das empresas, das fórmulas, do ponto, do Pix e dos roteiros do guia
+- `npm test`: testes das regras de cálculo, das regras das empresas, das fórmulas, do ponto, do Pix, dos roteiros do guia e do assistente de IA (liga um servidor de teste numa pasta temporária)
 - `npm run dev:servidor` e `npm run dev:tela`: modo de desenvolvimento (tela em http://localhost:5173)
 - `npm run build` + `npm start`: modo normal

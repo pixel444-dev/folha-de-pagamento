@@ -291,6 +291,36 @@ export function gravarConfig(chave, valor) {
   else db.prepare('INSERT OR REPLACE INTO configuracoes (chave, valor) VALUES (?, ?)').run(chave, String(valor));
 }
 
+// ---- assistente de IA (MCP, server/mcp.js)
+// Chaves que um agente de IA usa para entrar no sistema (guardadas só como hash) e o registro do que cada uma fez.
+// Tabelas novas: a versão anterior do código simplesmente não usa.
+db.exec(`
+CREATE TABLE IF NOT EXISTS mcp_chaves (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  nome         TEXT NOT NULL,
+  prefixo      TEXT NOT NULL,
+  token_hash   TEXT NOT NULL UNIQUE,
+  permissao    TEXT NOT NULL CHECK (permissao IN ('leitura', 'lancamentos')),
+  ver_pix      INTEGER NOT NULL DEFAULT 0,
+  criada_em    TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+  expira_em    TEXT,
+  ultimo_uso   TEXT,
+  revogada_em  TEXT
+);
+
+CREATE TABLE IF NOT EXISTS mcp_registro (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  quando      TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+  chave_id    INTEGER,
+  chave_nome  TEXT,
+  ip          TEXT,
+  ferramenta  TEXT NOT NULL,
+  argumentos  TEXT,
+  ok          INTEGER NOT NULL,
+  erro        TEXT
+);
+`);
+
 // ---- cópias de segurança
 
 const MANTER_COPIAS = 60;
